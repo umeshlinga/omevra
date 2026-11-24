@@ -3,6 +3,33 @@
 All notable changes to Omevra are recorded here. Versions follow
 semantic versioning.
 
+## [0.2.0] - 2026-11-24
+
+### Added
+- One Copilot, an organisation inside: senior role registry
+  (omevra/roles.py) where every role is senior by construction, from
+  Chief Copilot to division leads and senior specialists.
+- Team registry (omevra/teams.py): 14 teams including Cancer, Tumor
+  Biology, Rare Disease, DNA and Variant, Animal Health, Livestock,
+  Plant Crops and Plant Pathology, each with a senior lead and
+  declared problem areas, plus a router with a named fallback team
+  per division.
+- Orchestration engine (omevra/orchestra.py): the Chief Copilot
+  routes each question to a team, assigns primary and cross-check
+  workers, requires agreement from at least 2 independent workers
+  per key claim, escalates disagreements to the team lead with a
+  tiebreak worker, and excludes failed or erroring workers with the
+  reason recorded.
+- Six-stage QC pipeline: evidence gate, citation check, calculation
+  check, consistency check, cross-worker agreement, senior review.
+  The final answer is produced only when all six pass; otherwise the
+  Copilot declines naming every failed stage.
+- Full audit trail for every assignment, result, disagreement,
+  escalation, exclusion and sign-off.
+- Test suite grows to 212 tests, including a 1,000-worker scale
+  test and edge cases (empty registry, worker exceptions) that must
+  decline cleanly rather than crash.
+
 ## [0.1.0] - 2026-11-24
 
 ### Added

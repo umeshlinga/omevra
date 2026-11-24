@@ -10,6 +10,16 @@ Modules:
     evidence:    evidence items, sources, and the cite-or-decline gate.
     copilot:     the Omevra Copilot, the single question-answering
                  surface of the engine.
+    roles:       the senior role registry of the Copilot
+                 organisation (Chief Copilot, division leads, senior
+                 scientists, researchers, analysts, engineers).
+    teams:       the team registry and question router: separate
+                 senior teams per disease and species area, plus
+                 shared verification, calibration, and QC services.
+    orchestra:   the Chief Copilot engine: worker registry,
+                 assignment, cross-checking with escalation and
+                 tiebreaks, the six-stage QC pipeline, and the audit
+                 trail.  One Copilot outside, an organisation inside.
     domains:     the Human / Animal / Plant division registry.
     variant:     VCF records and HGVS parsing and validation.
     consequence: molecular consequence from real sequence.
@@ -29,15 +39,24 @@ from . import (
     copilot,
     domains,
     evidence,
+    orchestra,
     phenotype,
     population,
+    roles,
+    teams,
     variant,
 )
-from .copilot import Copilot, CopilotAnswer, CopilotQuestion, OmevraCopilot
+from .copilot import (
+    Copilot,
+    CopilotAnswer,
+    CopilotQuestion,
+    OmevraCopilot,
+    OrchestratedCopilot,
+)
 from .domains import Division, get_division
 from .evidence import EvidenceItem, evaluate_gate
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "acmg",
@@ -46,11 +65,15 @@ __all__ = [
     "copilot",
     "domains",
     "evidence",
+    "orchestra",
     "phenotype",
     "population",
+    "roles",
+    "teams",
     "variant",
     "Copilot",
     "OmevraCopilot",
+    "OrchestratedCopilot",
     "CopilotAnswer",
     "CopilotQuestion",
     "Division",

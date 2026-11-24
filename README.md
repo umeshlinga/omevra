@@ -32,6 +32,74 @@ Honest status: **Human is the live, benchmarked division today.**
 Animal and Plant are the expansion divisions, built on the same
 engine. This package does not claim benchmarked coverage for them.
 
+## One Copilot, an organisation inside
+
+There is exactly one Copilot on the outside. Inside it, from v0.2,
+sits a whole organisation, arranged like a company and run like a
+production system (`omevra/roles.py`, `omevra/teams.py`,
+`omevra/orchestra.py`):
+
+- **Hierarchy.** A Chief Copilot orchestrates everything. Below it,
+  division leads (Human, Animal, Plant) lead senior teams: separate
+  teams for cancer, tumor biology, rare disease, cardiac, neuro,
+  infectious disease, DNA and variant work, animal health,
+  livestock, plant crops, and plant pathology, plus shared services
+  for evidence verification, calibration and benchmarks, and QC.
+  Every role in the registry is senior level by design - senior
+  scientists, senior researchers, senior data analysts, senior
+  production engineers and managers - because this work has no
+  unsupervised junior grade.
+- **How a question flows.** The Chief routes the question to the
+  owning team, assigns sub-tasks to senior workers, and collects
+  structured results. The built-in workers are deterministic and
+  offline: they wrap the real engines of this package (evidence,
+  population, consequence, ACMG, calibration, phenotype) and compute
+  real results, with no language model and no network.
+- **Cross-checking.** Every key claim must be produced independently
+  by at least two workers. Disagreement is recorded, escalated to
+  the team lead, and resolved by a tiebreak worker or dropped. A
+  worker whose result fails screening - an uncited claim, a crashed
+  run, a reported failure - is named in the audit trail with the
+  failure, and its result is excluded. A bad worker can neither
+  poison an answer quietly nor crash the run.
+- **Six QC stages, in order.** (1) Evidence gate: the
+  cite-or-decline rule itself. (2) Citation check: every claim
+  carries a citation. (3) Calculation check: numeric claims are
+  independently recomputed. (4) Consistency check: no accepted
+  claims contradict on direction. (5) Cross-worker agreement check:
+  every key claim has at least two independent workers behind it.
+  (6) Senior review: the team lead signs off only when all prior
+  stages pass and no disagreement is unresolved. The final answer
+  is produced only if all six stages pass; otherwise the Copilot
+  declines, with every failed stage named.
+- **Audit trail.** Every assignment, result, check, disagreement,
+  escalation, exclusion, and sign-off is appended to an audit log
+  with timestamps and ids. An issued answer carries the QC report
+  summary and the audit id, so it can be traced back through the
+  organisation that produced it.
+
+Run the organisation demo (offline):
+
+```bash
+python -m omevra.orchestra
+```
+
+It routes the CFTR question to the Rare Disease Team, assigns
+evidence and population workers, prints all six QC stages, and
+issues the answer - then shows the BRCA1 question declining at the
+evidence gate with the failed stages named.
+
+Honest scale note: the worker registry and orchestration are
+designed to scale to thousands of registered specialist workers -
+workers are lightweight records plus a callable, held in a
+capability index, and a test registers 1,000 synthetic workers and
+verifies routing and assignment still work. The built-in offline
+workers wrap the real engines in this package; live model-backed
+workers attach through the same worker protocol. This package does
+not claim thousands of workers are running today; it claims the
+organisation is built so they can be registered, assigned,
+cross-checked, and audited when they are.
+
 ## The cite-or-decline principle
 
 Every answer the Copilot gives is built from evidence items. An
@@ -50,7 +118,23 @@ omevra/
     copilot.py      The Omevra Copilot: question in, gated answer or
                     structured decline out. Pluggable evidence
                     providers; optional LLM rephrasing hook is an
-                    interface only and off by default.
+                    interface only and off by default. Also carries
+                    OrchestratedCopilot, the production surface that
+                    runs a question through the whole organisation.
+    roles.py        The senior role registry: Chief Copilot,
+                    division leads, and senior scientists,
+                    researchers, data analysts, production engineers
+                    and managers, evidence reviewers, and the QC
+                    lead. Senior level only, by design.
+    teams.py        The org chart: separate senior teams per disease
+                    and species area, shared services for evidence
+                    verification, calibration, and QC, and the
+                    router that sends each question to its owning
+                    team.
+    orchestra.py    The Chief Copilot engine: worker registry,
+                    assignment, cross-checking with escalation and
+                    tiebreaks, the six-stage QC pipeline, and the
+                    audit trail.
     evidence.py     EvidenceItem model, source registry with
                     independence groups, verification status,
                     deduplication, and the gate itself.

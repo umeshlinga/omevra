@@ -71,6 +71,7 @@ __all__ = [
     "DisabledLLMHook",
     "Copilot",
     "OmevraCopilot",
+    "OrchestratedCopilot",
     "main",
 ]
 
@@ -160,6 +161,12 @@ class CopilotAnswer:
         warnings: Non-blocking caveats, including division notes.
         narrative: Optional rephrasing produced by an enabled LLM
             hook.  ``None`` unless a host application enabled one.
+        qc_summary: When this answer came from the orchestrated
+            Copilot (:mod:`omevra.orchestra`), the QC report summary:
+            the six stages and which passed.  ``None`` for answers
+            from the plain Copilot, which only applies the gate.
+        audit_id: Id of the audit log for an orchestrated run, or
+            ``None`` for a plain Copilot answer.
     """
 
     verdict: Verdict
@@ -175,6 +182,8 @@ class CopilotAnswer:
     independent_source_count: int = 0
     warnings: tuple[str, ...] = ()
     narrative: Optional[str] = None
+    qc_summary: Optional[dict] = None
+    audit_id: Optional[str] = None
 
     @property
     def answered(self) -> bool:
@@ -203,6 +212,8 @@ class CopilotAnswer:
             "independent_source_count": self.independent_source_count,
             "warnings": list(self.warnings),
             "narrative": self.narrative,
+            "qc_summary": self.qc_summary,
+            "audit_id": self.audit_id,
         }
 
     def render(self) -> str:
@@ -229,6 +240,16 @@ class CopilotAnswer:
                 lines.append(f"- {reason}")
         for warning in self.warnings:
             lines.append(f"Note: {warning}")
+        if self.qc_summary is not None:
+            failed = self.qc_summary.get("failed_stages", [])
+            if self.qc_summary.get("passed"):
+                lines.append("QC: all six stages passed")
+            else:
+                lines.append(
+                    "QC: failed stage(s): " + ", ".join(failed)
+                )
+            if self.audit_id:
+                lines.append(f"Audit: {self.audit_id}")
         return "\n".join(lines)
 
 
@@ -484,11 +505,53 @@ class Copilot:
             independent_source_count=answer.independent_source_count,
             warnings=answer.warnings,
             narrative=narrative,
+            qc_summary=answer.qc_summary,
+            audit_id=answer.audit_id,
         )
 
 
 #: Descriptive alias: there is one copilot, and this is its full name.
 OmevraCopilot = Copilot
+
+
+class OrchestratedCopilot:
+    """The same one Copilot, running through the whole organisation.
+
+    This is the user-facing entry point for the multi-agent
+    organisation in :mod:`omevra.orchestra`: one Copilot on the
+    outside, with a Chief Copilot orchestrating senior teams and
+    workers inside, six QC stages, and a full audit trail.  The
+    plain :class:`Copilot` still exists for callers who want only
+    the evidence gate; this class is the production surface.
+
+    The import of :mod:`omevra.orchestra` is deferred to
+    construction so the two modules do not import each other at
+    load time.
+    """
+
+    def __init__(
+        self,
+        provider: Optional[EvidenceProvider] = None,
+        registry: Optional[SourceRegistry] = None,
+        workers=None,
+        teams=None,
+        roles=None,
+    ) -> None:
+        from .orchestra import Orchestra
+
+        self._orchestra = Orchestra(
+            provider=provider,
+            source_registry=registry,
+            workers=workers,
+            teams=teams,
+            roles=roles,
+        )
+
+    def ask(self, question, *, engine_tasks=(), payload=None):
+        """Answer or decline a question through the organisation."""
+        return self._orchestra.ask(
+            question, engine_tasks=engine_tasks, payload=payload
+        )
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
