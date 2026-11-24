@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omevra"
+version = "0.1.0"
+description = "Omevra: an evidence engine for biology across Human, Animal, and Plant divisions, with the Omevra Copilot and a cite-or-decline evidence gate."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary - research software, all rights reserved" }
+authors = [
+    { name = "Umesh Linga" },
+]
+keywords = [
+    "bioinformatics",
+    "variant-interpretation",
+    "acmg",
+    "evidence",
+    "calibration",
+    "computational-biology",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+# Core package: standard library only, by design.
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+omevra-copilot = "omevra.copilot:main"
+
+[tool.setuptools]
+packages = ["omevra"]
+
+[tool.setuptools.package-data]
+omevra = ["data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,60 @@
+{
+  "examples": [
+    {
+      "coding_hgvs": "c.1521_1523delCTT",
+      "consequence": "inframe_deletion",
+      "description": "The most common cystic fibrosis-causing variant worldwide: an in-frame deletion of three bases (CTT) removing a single phenylalanine at position 508 of the CFTR protein. The protein is made but misfolds and is largely degraded before reaching the cell surface.",
+      "disease": "Cystic fibrosis",
+      "division": "human",
+      "gene": "CFTR",
+      "id": "cftr-phe508del",
+      "inheritance": "autosomal_recessive",
+      "protein_hgvs": "p.Phe508del"
+    },
+    {
+      "coding_hgvs": "c.68_69delAG",
+      "consequence": "frameshift_variant",
+      "description": "A two-base deletion early in BRCA1, historically written 185delAG, one of the founder variants described in Ashkenazi Jewish populations. The deletion shifts the reading frame near the start of the protein.",
+      "disease": "Hereditary breast and ovarian cancer syndrome",
+      "division": "human",
+      "gene": "BRCA1",
+      "id": "brca1-founder-del",
+      "inheritance": "autosomal_dominant",
+      "protein_hgvs": null
+    },
+    {
+      "coding_hgvs": "c.20A>T",
+      "consequence": "missense_variant",
+      "description": "The sickle cell variant: a single A to T substitution (c.20A>T) in the GAG codon of beta globin changes a glutamic acid to a valine, producing haemoglobin S which polymerises when deoxygenated. It is historically called Glu6Val after the mature beta chain, in which the initiator methionine is cleaved; counted from the initiator methionine as HGVS requires, the residue is position 7.",
+      "disease": "Sickle cell disease",
+      "division": "human",
+      "gene": "HBB",
+      "id": "hbb-sickle",
+      "inheritance": "autosomal_recessive",
+      "protein_hgvs": "p.Glu7Val"
+    },
+    {
+      "coding_hgvs": "c.1138G>A",
+      "consequence": "missense_variant",
+      "description": "The classic achondroplasia variant: a glycine to arginine substitution at position 380 in the transmembrane domain of FGFR3, causing constitutive receptor activation. Nearly all cases of achondroplasia carry this or the adjacent c.1138G>C change at the same codon.",
+      "disease": "Achondroplasia",
+      "division": "human",
+      "gene": "FGFR3",
+      "id": "fgfr3-gly380arg",
+      "inheritance": "autosomal_dominant",
+      "protein_hgvs": "p.Gly380Arg"
+    },
+    {
+      "coding_hgvs": null,
+      "consequence": null,
+      "description": "An X-linked red cell enzyme deficiency included here as a disease-area example only; no single variant is asserted in this entry.",
+      "disease": "G6PD deficiency",
+      "division": "human",
+      "gene": "G6PD",
+      "id": "g6pd-example-note",
+      "inheritance": "x_linked",
+      "protein_hgvs": null
+    }
+  ],
+  "label": "Illustrative worked examples bundled with Omevra. Well-known textbook variants, included to demonstrate the software. Not a clinical database and not a source of classifications for real patients."
+}

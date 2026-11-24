@@ -1,0 +1,128 @@
+{
+  "label": "Offline demonstration evidence bundled with Omevra. Illustrative items written for the demo provider, pointing at real, well-known resources a reader can check. This is not live database access and these items are not a clinical classification.",
+  "topics": {
+    "brca1:c.68_69delag": {
+      "aliases": [
+        "brca1",
+        "68_69del",
+        "185delag",
+        "c.68_69delag"
+      ],
+      "items": [
+        {
+          "citation": "ClinVar, BRCA1 c.68_69delAG variation report",
+          "direction": "supports",
+          "item_id": "demo-brca1-1",
+          "kind": "curated_classification",
+          "locator": "BRCA1 c.68_69delAG",
+          "source_id": "clinvar",
+          "statement": "BRCA1 c.68_69delAG (historically 185delAG) is recorded in ClinVar with pathogenic interpretations for hereditary breast and ovarian cancer syndrome.",
+          "status": "verified"
+        },
+        {
+          "citation": "OMIM entry for BRCA1 and breast-ovarian cancer susceptibility",
+          "direction": "supports",
+          "item_id": "demo-brca1-2",
+          "kind": "literature_report",
+          "locator": "OMIM 113705 / 604370",
+          "source_id": "omim",
+          "statement": "BRCA1 loss of function is an established mechanism of hereditary breast and ovarian cancer susceptibility, and c.68_69delAG is a frameshifting founder variant described in that literature.",
+          "status": "verified"
+        }
+      ]
+    },
+    "cftr:p.phe508del": {
+      "aliases": [
+        "cftr",
+        "phe508del",
+        "f508del",
+        "p.phe508del",
+        "c.1521_1523delctt",
+        "cystic fibrosis"
+      ],
+      "items": [
+        {
+          "citation": "ClinVar, CFTR c.1521_1523delCTT (p.Phe508del) variation report",
+          "direction": "supports",
+          "item_id": "demo-cftr-1",
+          "kind": "curated_classification",
+          "locator": "CFTR c.1521_1523delCTT",
+          "source_id": "clinvar",
+          "statement": "CFTR c.1521_1523delCTT, encoding p.Phe508del, is classified as pathogenic for cystic fibrosis by multiple clinical laboratory submitters in ClinVar.",
+          "status": "verified"
+        },
+        {
+          "citation": "Cutting GR. Cystic fibrosis genetics: from molecular understanding to clinical application. Nature Reviews Genetics 2015;16:45-56",
+          "direction": "supports",
+          "item_id": "demo-cftr-2",
+          "kind": "literature_report",
+          "locator": "review of CFTR variant biology",
+          "source_id": "pubmed-literature",
+          "statement": "p.Phe508del is the most common cystic fibrosis-causing CFTR variant worldwide and acts by protein misfolding and premature degradation, as reviewed by Cutting (2015).",
+          "status": "verified"
+        },
+        {
+          "citation": "OMIM #219700, Cystic Fibrosis",
+          "direction": "supports",
+          "item_id": "demo-cftr-3",
+          "kind": "clinical_observation",
+          "locator": "OMIM 219700",
+          "source_id": "omim",
+          "statement": "OMIM records cystic fibrosis as an autosomal recessive disorder caused by biallelic CFTR variants, with p.Phe508del the predominant allele in many populations.",
+          "status": "verified"
+        },
+        {
+          "citation": "Omevra bundled illustrative examples, CFTR entry",
+          "direction": "supports",
+          "item_id": "demo-cftr-4",
+          "kind": "other",
+          "locator": "omevra/data/examples.json",
+          "source_id": "demo-bundled",
+          "statement": "The deletion c.1521_1523delCTT removes three bases and therefore deletes one residue without shifting the reading frame, an in-frame deletion.",
+          "status": "verified"
+        }
+      ]
+    },
+    "hbb:sickle": {
+      "aliases": [
+        "hbb",
+        "sickle",
+        "glu6val",
+        "haemoglobin s",
+        "hemoglobin s"
+      ],
+      "items": [
+        {
+          "citation": "OMIM #603903, Sickle Cell Anemia",
+          "direction": "supports",
+          "item_id": "demo-hbb-1",
+          "kind": "clinical_observation",
+          "locator": "OMIM 603903",
+          "source_id": "omim",
+          "statement": "Sickle cell disease is an autosomal recessive haemoglobinopathy caused by the HBB sickle variant, with deoxygenated haemoglobin S polymerising in red cells.",
+          "status": "verified"
+        },
+        {
+          "citation": "Peer-reviewed literature on haemoglobin S polymerisation, indexed in PubMed",
+          "direction": "supports",
+          "item_id": "demo-hbb-2",
+          "kind": "functional_study",
+          "locator": "haemoglobin S literature",
+          "source_id": "pubmed-literature",
+          "statement": "The glutamic acid to valine substitution in beta globin produces haemoglobin S, whose polymerisation on deoxygenation is the molecular basis of red cell sickling.",
+          "status": "verified"
+        },
+        {
+          "citation": "Omevra bundled illustrative examples, HBB entry",
+          "direction": "supports",
+          "item_id": "demo-hbb-3",
+          "kind": "other",
+          "locator": "omevra/data/examples.json",
+          "source_id": "demo-bundled-2",
+          "statement": "The sickle variant is a single nucleotide substitution, c.20A>T in HBB, and is one of the textbook examples of a pathogenic missense variant.",
+          "status": "verified"
+        }
+      ]
+    }
+  }
+}
