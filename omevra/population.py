@@ -87,7 +87,9 @@ class Inheritance(str, Enum):
 
 
 def _validate_probability(name: str, value: float, *, allow_zero: bool) -> None:
-    if value is None or math.isnan(value) or math.isinf(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a finite number")
+    if math.isnan(value) or math.isinf(value):
         raise ValueError(f"{name} must be a finite number")
     lower_ok = value >= 0 if allow_zero else value > 0
     if not lower_ok or value > 1:
@@ -168,6 +170,8 @@ def max_credible_allele_count(model: DiseaseModel, allele_number: int) -> float:
     against integer counts should treat any observed count strictly
     greater than this value as exceeding the ceiling.
     """
+    if isinstance(allele_number, bool) or not isinstance(allele_number, (int, float)):
+        raise ValueError("allele_number must be a positive number")
     if allele_number <= 0:
         raise ValueError("allele_number must be positive")
     return max_credible_af(model) * allele_number

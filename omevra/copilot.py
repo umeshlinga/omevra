@@ -43,6 +43,7 @@ bundled evidence is deliberately below the gate).
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -130,9 +131,14 @@ class Claim:
     evidence_item_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        if not self.citations:
+        if not self.citations or any(
+            not isinstance(c, str) or not c.strip() for c in self.citations
+        ):
             raise ValueError("a claim without citations may not be constructed")
-        if not self.evidence_item_ids:
+        if not self.evidence_item_ids or any(
+            not isinstance(i, str) or not i.strip()
+            for i in self.evidence_item_ids
+        ):
             raise ValueError("a claim must name its evidence items")
 
 
@@ -302,7 +308,11 @@ class OfflineDemoProvider:
         for topic_key, topic in self._topics.items():
             for alias in topic.get("aliases", []):
                 alias_lower = alias.lower()
-                if alias_lower in lowered and len(alias_lower) > best_length:
+                # Word-boundary match: an alias buried inside a
+                # larger token (e.g. "xcftrx") must not match
+                # (hardening, Worker A Bug 8).
+                pattern = r"(?<![a-z0-9])" + re.escape(alias_lower) + r"(?![a-z0-9])"
+                if re.search(pattern, lowered) and len(alias_lower) > best_length:
                     best_topic = topic_key
                     best_length = len(alias_lower)
         return best_topic
@@ -408,6 +418,11 @@ class Copilot:
         """Answer or decline a question, under the evidence gate."""
         if isinstance(question, str):
             question = CopilotQuestion(text=question)
+        if not isinstance(question, CopilotQuestion):
+            raise TypeError(
+                "question must be a CopilotQuestion or a string, "
+                f"got {type(question).__name__}"
+            )
         division_info = get_division(question.division)
         warnings: list[str] = []
         if question.division is not Division.HUMAN:
@@ -416,6 +431,32 @@ class Copilot:
                 "the cite-or-decline gate applies unchanged, and "
                 "human-clinical frameworks such as ACMG/AMP are not "
                 "applied outside the Human division"
+            )
+
+        # Hardening (Worker A Bug 2): the bundled evidence set is
+        # human-division evidence. It must never be issued as an
+        # answer in the Animal or Plant divisions, whose evidence
+        # is not yet division-scoped or benchmarked.
+        if question.division is not Division.HUMAN:
+            return self._finish(
+                CopilotAnswer(
+                    verdict=Verdict.DECLINE,
+                    question=question.text,
+                    topic_key=None,
+                    division=question.division,
+                    division_name=division_info.name,
+                    species=question.species,
+                    declined_reasons=(
+                        f"the {division_info.name} division is an "
+                        "expansion division: its evidence is not yet "
+                        "division-scoped or benchmarked, and human "
+                        "clinical evidence is never issued outside "
+                        "the Human division; the Copilot declines "
+                        "rather than leaking human evidence into a "
+                        f"{division_info.name} answer",
+                    ),
+                    warnings=tuple(warnings),
+                )
             )
 
         topic_key = self.provider.topic_for_question(question.text)
@@ -586,7 +627,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print(
         "Division context check: the same question asked with "
         "species Bos taurus is carried as division "
-        f"'{animal_case.division.value}' in the structured output."
+        f"'{animal_case.division.value}' and "
+        f"{animal_case.verdict.value}s, because human evidence is "
+        "never issued outside the Human division."
     )
     return 0
 

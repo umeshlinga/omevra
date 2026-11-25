@@ -183,6 +183,8 @@ class SourceRegistry:
 
         Unknown ids fall back to a singleton group named after the id,
         prefixed so it can never collide with a registered group.
+        Note: the gate never counts unregistered sources (see
+        :func:`evaluate_gate`); this label exists for diagnostics.
         """
         source = self._sources.get(source_id)
         if source is None:
@@ -329,9 +331,9 @@ class EvidenceItem:
     notes: str = ""
 
     def __post_init__(self) -> None:
-        if not self.item_id:
+        if not self.item_id or not self.item_id.strip():
             raise ValueError("item_id must be non-empty")
-        if not self.topic_key:
+        if not self.topic_key or not self.topic_key.strip():
             raise ValueError("topic_key must be non-empty")
         if not self.statement.strip():
             raise ValueError("statement must be non-empty")
@@ -379,7 +381,13 @@ def deduplicate(items: Sequence[EvidenceItem]) -> list[EvidenceItem]:
     best: dict[str, EvidenceItem] = {}
     order: list[str] = []
     for item in items:
-        key = item.content_fingerprint()
+        # A citation restated in other words is the SAME evidence line:
+        # collapse on normalised citation identity per topic as well as
+        # on the exact content fingerprint (hardening, Worker A Bug 3).
+        cite_key = " ".join(item.citation.lower().split())
+        key = "cite:" + hashlib.sha256(
+            f"{item.topic_key}\n{cite_key}".encode("utf-8")
+        ).hexdigest()
         if key not in best:
             best[key] = item
             order.append(key)
@@ -465,11 +473,19 @@ def evaluate_gate(
         raise ValueError("min_independent must be at least 1")
 
     relevant = [item for item in deduplicate(list(items)) if item.topic_key == topic_key]
-    supporting = tuple(
+    supporting_all = tuple(
         item
         for item in relevant
         if item.is_verified and item.direction is SupportDirection.SUPPORTS
     )
+    # Hardening (Worker A Bug 1): an unregistered source cannot vouch
+    # for evidence. Only items whose source_id is in the registry
+    # count toward the gate; unregistered items are warned about and
+    # excluded from the count and from any issued answer.
+    supporting = tuple(
+        item for item in supporting_all if item.source_id in registry
+    )
+    unregistered_count = len(supporting_all) - len(supporting)
     refuting = tuple(
         item
         for item in relevant
@@ -484,8 +500,14 @@ def evaluate_gate(
         if item.source_id not in registry:
             warnings.append(
                 f"item {item.item_id} references unregistered source "
-                f"{item.source_id!r}; treated as its own source group"
+                f"{item.source_id!r}; unregistered sources do not "
+                "count toward the gate"
             )
+    if unregistered_count:
+        warnings.append(
+            f"{unregistered_count} verified supporting item(s) were "
+            "excluded because their source is not registered"
+        )
     failed_count = sum(1 for item in relevant if item.is_failed)
     if failed_count:
         warnings.append(
@@ -511,6 +533,16 @@ def evaluate_gate(
             f"verified supporting items come from {len(groups)} "
             f"independent source group(s); the gate requires at "
             f"least {min_independent}"
+        )
+    # Hardening (Worker A Bug 5): verified refuting evidence that
+    # matches or outweighs the supporting evidence blocks an answer;
+    # the disagreement must be resolved, not merely disclosed.
+    if refuting and len(refuting) >= len(supporting):
+        passed = False
+        reasons.append(
+            f"{len(refuting)} verified item(s) refute the claim, "
+            f"matching or outweighing the {len(supporting)} "
+            "supporting item(s); disagreement is unresolved"
         )
     if passed:
         reasons.append(

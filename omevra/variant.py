@@ -76,7 +76,7 @@ def validate_dna_sequence(
     Returns the normalised (upper-case) sequence.  Raises
     :class:`VariantParseError` describing the first problem found.
     """
-    if sequence is None:
+    if not isinstance(sequence, str):
         raise VariantParseError(f"{field_name} must not be None")
     seq = sequence.strip().upper()
     if not seq and not allow_empty:
@@ -188,6 +188,8 @@ class VcfRecord:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "chromosome", normalise_chromosome(self.chromosome))
+        if not isinstance(self.position, int) or isinstance(self.position, bool):
+            raise VariantParseError("VCF position (POS) must be an integer")
         if self.position < 1:
             raise VariantParseError("VCF position (POS) is 1-based, must be >= 1")
         ref = validate_dna_sequence(self.ref, field_name="REF")
@@ -272,7 +274,7 @@ def parse_vcf_line(line: str) -> VcfRecord:
     Multi-allelic ALT fields (comma separated) are rejected: split
     them into one record per allele before calling.
     """
-    if line is None:
+    if not isinstance(line, str):
         raise VariantParseError("VCF line must not be None")
     text = line.strip()
     if not text:
@@ -428,8 +430,8 @@ def parse_coding_hgvs(text: str) -> CodingVariant:
             stated range (a common transcription error worth catching
             loudly rather than propagating).
     """
-    if text is None:
-        raise VariantParseError("HGVS string must not be None")
+    if not isinstance(text, str):
+        raise VariantParseError("HGVS string must be a string")
     raw = text.strip()
     if raw.lower().startswith("c."):
         raw = raw[2:]
@@ -617,8 +619,8 @@ def parse_protein_hgvs(text: str) -> ProteinVariant:
     Raises:
         VariantParseError: for unsupported or malformed strings.
     """
-    if text is None:
-        raise VariantParseError("protein HGVS string must not be None")
+    if not isinstance(text, str):
+        raise VariantParseError("protein HGVS string must be a string")
     raw = text.strip()
     if raw.lower().startswith("p."):
         raw = raw[2:]

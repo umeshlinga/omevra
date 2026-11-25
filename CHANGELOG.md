@@ -3,6 +3,46 @@
 All notable changes to Omevra are recorded here. Versions follow
 semantic versioning.
 
+## [0.2.1] - 2026-11-25
+
+Step 1 hardening round. Three senior test workers ran adversarial,
+fuzz, and stress suites against v0.2.0 (61 gate cases, 18,706 fuzz
+calls, 17 orchestra stress/scale checks incl. a 10,000-worker
+registration test); the CEO reviewed every finding, fixed what was
+real, and re-ran all suites.
+
+### Fixed
+- Gate integrity: unregistered (fabricated) sources no longer count
+  toward the cite-or-decline gate; only registry sources can vouch.
+- Cross-division leakage: human clinical evidence is never issued
+  as an answer in the Animal or Plant divisions; the Copilot
+  declines there until division-scoped evidence is benchmarked.
+- Evidence counting: one citation restated in other words is one
+  evidence line (citation-identity deduplication), and verified
+  refuting evidence that matches or outweighs supporting evidence
+  now blocks an answer instead of only warning.
+- Topic matching uses word boundaries (an alias inside a larger
+  token no longer matches).
+- Validation: Claim rejects empty citation strings, EvidenceItem
+  rejects whitespace ids, Copilot.ask raises a clean TypeError on
+  non-string input.
+- Wrong-type arguments across variant/consequence/population/
+  calibration now raise the documented ValueError/VariantParseError
+  instead of leaking AttributeError/TypeError (12 fuzz patterns);
+  calibration_table caps n_bins at 10,000 (resource guard).
+
+### Added
+- tests/test_hardening_step1.py: 12 regression tests. Suite is now
+  224 tests. Worker suites after fixes: gate 58/61 (remaining 3 are
+  the documented demo-provider intent limitation, not carried into
+  the live provider), fuzz 0 failures, orchestra stress 17/17.
+
+### Known, scheduled
+- A permanently-failing worker is excluded per run but re-assigned
+  on the next run (no cross-run failure history). Correctness is
+  unaffected; registry deprioritisation is scheduled in Item 9b.
+semantic versioning.
+
 ## [0.2.0] - 2026-11-24
 
 ### Added

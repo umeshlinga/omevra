@@ -94,7 +94,7 @@ def translate_codon(codon: str) -> str:
             codon.  Ambiguous bases are rejected: a codon containing
         ``N`` has no single correct translation.
     """
-    if codon is None or len(codon) != 3:
+    if not isinstance(codon, str) or len(codon) != 3:
         raise VariantParseError(f"a codon is exactly 3 bases, got {codon!r}")
     normalised = validate_dna_sequence(codon, field_name="codon")
     return CODON_TABLE[normalised]

@@ -66,7 +66,10 @@ def _validate(
         clean_labels.append(int(label))
     clean_scores: list[float] = []
     for score in scores:
-        value = float(score)
+        try:
+            value = float(score)
+        except (TypeError, ValueError):
+            raise ValueError(f"scores must be real numbers, got {score!r}") from None
         if math.isnan(value) or math.isinf(value):
             raise ValueError("scores must be finite")
         if value < 0.0 or value > 1.0:
@@ -130,6 +133,8 @@ def log_loss(
     epsilon: float = 1e-15,
 ) -> float:
     """Mean negative log likelihood, with clipping at ``epsilon``."""
+    if isinstance(epsilon, bool) or not isinstance(epsilon, (int, float)):
+        raise ValueError("epsilon must lie in (0, 0.5)")
     if not 0 < epsilon < 0.5:
         raise ValueError("epsilon must lie in (0, 0.5)")
     clean_labels, clean_scores = _validate(labels, scores)
@@ -205,8 +210,12 @@ def calibration_table(
     reported with zero count and zero gap, and contribute nothing to
     the ECE.
     """
+    if isinstance(n_bins, bool) or not isinstance(n_bins, int):
+        raise ValueError("n_bins must be an integer")
     if n_bins < 1:
         raise ValueError("n_bins must be at least 1")
+    if n_bins > 10000:
+        raise ValueError("n_bins must be at most 10000 (resource cap)")
     clean_labels, clean_scores = _validate(labels, scores)
     counts = [0] * n_bins
     score_sums = [0.0] * n_bins
