@@ -1,4 +1,15 @@
-"""Gate hardening regression tests (2026-11-25 red-team follow-up).
+"""Gate hardening regression tests: independent re-confirmation.
+
+Provenance (reconciliation, 2026-11-25): this is the test set of
+hardening effort B (the confirmation module), moved here from
+tests/test_gate_hardening.py to resolve the filename collision
+with effort A's suite, which keeps that name.  Every test is
+preserved; exactly one pin was deliberately inverted by the
+reconciliation — the RAG bridge's default.  Effort B pinned an
+ingest-trust default (identifier carriage alone made items
+VERIFIED); the reconciled gate law retires it, and
+test_rag_bridge_default_rule_counts_nothing_without_a_check pins
+the new default where the old pin stood.
 
 An outside review demonstrated that fabricated papers handed in
 through a faked data feed were accepted as VERIFIED: every live
@@ -15,9 +26,9 @@ not even numeric passed.  These tests pin the fixes:
 * ClinVar's transcript-version restatements of one interpretation
   emit one item, while genuinely different classifications do not
   collapse;
-* the RAG bridge's default ingest-trust rule is pinned honestly,
-  and the bridge with a live confirmer wired in demotes fabricated
-  corpus documents.
+* the RAG bridge counts nothing without a check (the reconciled
+  default), and with a live confirmer wired in it demotes
+  fabricated corpus documents to FAILED.
 
 Fixture transports only; the suite never touches the network.  In
 these fixture worlds PubMed is honest: it resolves exactly the
@@ -381,7 +392,7 @@ def test_drug_fabricated_papers_never_count():
     assert not evaluate_gate(items, "drug:CFTR").passed
 
 
-# -- RAG bridge: ingest trust pinned, confirmer demotes fabrications ---------
+# -- RAG bridge: no check counts nothing; confirmer demotes fabrications ----
 
 
 def _fabricated_index():
@@ -398,16 +409,25 @@ def _fabricated_index():
     return index
 
 
-def test_rag_bridge_default_rule_trusts_corpus_ingest():
-    """Pinned honestly: with no confirmer, the bridge's rule is
-    identifier-carriage — its trust boundary is corpus ingest.
-    This test documents that boundary; it is not an endorsement."""
+def test_rag_bridge_default_rule_counts_nothing_without_a_check():
+    """Reconciliation pin (2026-11-25): effort B originally pinned
+    an ingest-trust default at this spot — with no confirmer,
+    identifier carriage alone made bridge items VERIFIED.  The
+    reconciled rule (Claude's gate law: status comes from an
+    actual check, never from an identifier's shape) retires that
+    default: with neither a confirmer nor a verifier, fabricated
+    corpus documents stay UNVERIFIED and count for nothing at the
+    gate.  Wire a confirmer (next test) and the same documents
+    are FAILED instead."""
     items = evidence_from_retrieval(
         _fabricated_index(), "CFTR Phe508del",
         topic_key="CFTR:p.Phe508del", k=3,
     )
     assert len(items) == 3
-    assert all(i.is_verified for i in items)
+    assert all(i.status is VerificationStatus.UNVERIFIED for i in items)
+    gate = evaluate_gate(items, "CFTR:p.Phe508del")
+    assert gate.verified_count == 0
+    assert not gate.passed
 
 
 def test_rag_bridge_with_confirmer_demotes_fabricated_corpus():
