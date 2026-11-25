@@ -86,6 +86,7 @@ from .evidence import (
     SourceRegistry,
     SupportDirection,
     default_source_registry,
+    demo_source_registry,
     deduplicate,
     evaluate_gate,
 )
@@ -1415,10 +1416,15 @@ class Orchestra:
         min_agreement: int = 2,
     ) -> None:
         self.provider = provider if provider is not None else OfflineDemoProvider()
-        self.source_registry = (
-            source_registry if source_registry is not None
-            else default_source_registry()
-        )
+        if source_registry is None:
+            # Illustrative sources are registered only when the
+            # bundled demo provider is the one supplying evidence.
+            source_registry = (
+                demo_source_registry()
+                if isinstance(self.provider, OfflineDemoProvider)
+                else default_source_registry()
+            )
+        self.source_registry = source_registry
         self.workers = workers if workers is not None else default_worker_registry()
         self.teams = teams if teams is not None else default_team_registry()
         self.roles = roles if roles is not None else default_role_registry()

@@ -34,6 +34,7 @@ Standard library only.
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Iterable, Mapping, Optional, Sequence
@@ -47,6 +48,9 @@ __all__ = [
     "Source",
     "SourceRegistry",
     "default_source_registry",
+    "demo_source_registry",
+    "canonical_evidence_id",
+    "normalise_topic_key",
     "EvidenceItem",
     "GateDecision",
     "evaluate_gate",
@@ -193,15 +197,59 @@ class SourceRegistry:
 
 
 def default_source_registry() -> SourceRegistry:
-    """Build the registry of sources Provome knows about out of the box.
+    """Build the production registry of sources Provome knows about.
 
     These are real, well known resources in human genetics and drug
     discovery.  Listing a source here does not by itself mean a
     provider queries it; the registry describes provenance for
     evidence items that a provider supplies, and the gate counts
     only items from registered sources.
+
+    The bundled demo sources are deliberately NOT in this registry:
+    illustrative data must never be able to satisfy the gate in a
+    production configuration.  Use :func:`demo_source_registry` for
+    the offline demo.
     """
-    return SourceRegistry(
+    return SourceRegistry(_production_sources())
+
+
+def demo_source_registry() -> SourceRegistry:
+    """Production sources plus the two bundled illustrative sources.
+
+    Only the offline demo provider should be paired with this
+    registry.  The demo sets are registered as separate independence
+    groups so the demo can exercise the independence requirement.
+    """
+    return SourceRegistry(_production_sources() + _demo_sources())
+
+
+def _demo_sources() -> list[Source]:
+    return [
+            Source(
+                source_id="demo-bundled",
+                name="Provome bundled illustrative examples",
+                independence_group="provome-demo",
+                description=(
+                    "Small hand-checked example set bundled with this "
+                    "package for offline demonstration and testing. "
+                    "Illustrative only; not a clinical data source."
+                ),
+            ),
+            Source(
+                source_id="demo-bundled-2",
+                name="Provome bundled illustrative examples, second set",
+                independence_group="provome-demo-2",
+                description=(
+                    "Second illustrative example set, curated "
+                    "separately from the first set so the offline "
+                    "demo can exercise the independence requirement."
+                ),
+            ),
+    ]
+
+
+def _production_sources() -> list[Source]:
+    return (
         [
             Source(
                 source_id="clinvar",
@@ -289,26 +337,6 @@ def default_source_registry() -> SourceRegistry:
                     "alongside it."
                 ),
                 base_url="https://rest.ensembl.org/",
-            ),
-            Source(
-                source_id="demo-bundled",
-                name="Provome bundled illustrative examples",
-                independence_group="provome-demo",
-                description=(
-                    "Small hand-checked example set bundled with this "
-                    "package for offline demonstration and testing. "
-                    "Illustrative only; not a clinical data source."
-                ),
-            ),
-            Source(
-                source_id="demo-bundled-2",
-                name="Provome bundled illustrative examples, second set",
-                independence_group="provome-demo-2",
-                description=(
-                    "Second illustrative example set, curated "
-                    "separately from the first set so the offline "
-                    "demo can exercise the independence requirement."
-                ),
             ),
         ]
     )
@@ -400,30 +428,95 @@ class EvidenceItem:
         return self.citation
 
 
-def deduplicate(items: Sequence[EvidenceItem]) -> list[EvidenceItem]:
-    """Remove duplicate evidence items, keeping the strongest copy.
+def normalise_topic_key(topic_key: str) -> str:
+    """Canonical form of a topic key: whitespace collapsed, case folded.
 
-    Duplicates are detected by content fingerprint.  When duplicates
-    disagree about verification, the verified copy wins, because a
-    later successful check supersedes an unchecked ingest.  A failed
-    copy never displaces a verified one.  Order of first appearance is
-    preserved for the survivors.
+    ``"CFTR:p.Phe508del"`` and ``" cftr:p.phe508del "`` name the same
+    topic; the gate must not silently decline because a provider and
+    a caller spelled the key with different case.
+    """
+    return " ".join(topic_key.split()).casefold()
+
+
+# Identifier namespaces recognised in a citation (or a locator URL).
+# Order matters: the first namespace that matches wins.  Only
+# identifiers that name ONE record are listed; identifiers that can
+# be shared by several distinct records (a ChEMBL target id appears
+# in both a target record and a mechanism record) are deliberately
+# not used, so distinct evidence lines are never merged by accident.
+_CANONICAL_ID_PATTERNS: tuple[tuple[str, "re.Pattern[str]"], ...] = (
+    ("pmid", re.compile(r"\bPMID[\s:#]*0*(\d{1,9})\b", re.IGNORECASE)),
+    ("pmid", re.compile(r"pubmed\.ncbi\.nlm\.nih\.gov/0*(\d{1,9})\b", re.IGNORECASE)),
+    ("pmid", re.compile(r"europepmc\.org/(?:abstract|article)/MED/0*(\d{1,9})\b", re.IGNORECASE)),
+    ("clinvar", re.compile(r"\bVCV0*(\d{1,12})\b", re.IGNORECASE)),
+    ("clinvar", re.compile(r"\bClinVar\s+Variation\s+ID\s*:?\s*0*(\d{1,12})\b", re.IGNORECASE)),
+    ("clinvar", re.compile(r"clinvar/variation/0*(\d{1,12})\b", re.IGNORECASE)),
+    ("omim", re.compile(r"\bOMIM[\s:#*]*(\d{6}(?:\.\d{4})?)\b", re.IGNORECASE)),
+)
+
+# Retrieval metadata that changes between fetches of the same record
+# and must not make one record look like two.
+_FETCH_NOTE_RE = re.compile(
+    r"\((?:[^()]*\b(?:fetched|retrieved|accessed|indexed copy)\b[^()]*)\)",
+    re.IGNORECASE,
+)
+_ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+_NON_WORD_RE = re.compile(r"[^0-9a-z]+")
+
+
+def canonical_evidence_id(item: EvidenceItem) -> str:
+    """The identity of the evidence *line* an item cites.
+
+    Two items with the same canonical id are one piece of evidence,
+    however their citations are worded, whichever provider produced
+    them, and whenever they were fetched.  Recognised record
+    identifiers (PMID, ClinVar Variation ID / VCV, OMIM) are
+    namespaced and source-independent: the same PMID reached through
+    Europe PMC and through a local index is one paper.  Anything else
+    falls back to the source id plus the citation with fetch notes and
+    dates removed and punctuation collapsed.
+    """
+    haystacks = [item.citation]
+    if item.locator:
+        haystacks.append(item.locator)
+    for namespace, pattern in _CANONICAL_ID_PATTERNS:
+        for text in haystacks:
+            match = pattern.search(text)
+            if match:
+                return f"{namespace}:{match.group(1).lower()}"
+    text = _FETCH_NOTE_RE.sub(" ", item.citation)
+    text = _ISO_DATE_RE.sub(" ", text)
+    text = _NON_WORD_RE.sub(" ", text.lower()).strip()
+    return f"cite:{item.source_id}:{text}"
+
+
+def deduplicate(items: Sequence[EvidenceItem]) -> list[EvidenceItem]:
+    """Collapse items that cite the same evidence line.
+
+    Items are the same evidence when they share a topic (normalised),
+    a :func:`canonical_evidence_id`, and a support direction.
+    Direction is part of the key on purpose: a refuting item is never
+    folded into a supporting one that happens to cite the same record,
+    so disagreement cannot disappear in deduplication.
+
+    When copies disagree about verification, a FAILED check wins over
+    everything (a source that was checked and did not say this cannot
+    be rescued by another copy claiming VERIFIED), then VERIFIED wins
+    over UNVERIFIED.  Order of first appearance is preserved.
     """
     rank = {
+        VerificationStatus.FAILED: 3,
         VerificationStatus.VERIFIED: 2,
         VerificationStatus.UNVERIFIED: 1,
-        VerificationStatus.FAILED: 0,
     }
-    best: dict[str, EvidenceItem] = {}
-    order: list[str] = []
+    best: dict[tuple[str, str, str], EvidenceItem] = {}
+    order: list[tuple[str, str, str]] = []
     for item in items:
-        # A citation restated in other words is the SAME evidence line:
-        # collapse on normalised citation identity per topic as well as
-        # on the exact content fingerprint (hardening, Worker A Bug 3).
-        cite_key = " ".join(item.citation.lower().split())
-        key = "cite:" + hashlib.sha256(
-            f"{item.topic_key}\n{cite_key}".encode("utf-8")
-        ).hexdigest()
+        key = (
+            normalise_topic_key(item.topic_key),
+            canonical_evidence_id(item),
+            item.direction.value,
+        )
         if key not in best:
             best[key] = item
             order.append(key)
@@ -478,6 +571,11 @@ def evaluate_gate(
 ) -> GateDecision:
     """Apply the cite-or-decline gate to the evidence for one topic.
 
+    Topic keys are compared after :func:`normalise_topic_key`, and
+    items are deduplicated by evidence line (:func:`deduplicate`), so
+    one record fetched twice, or one paper reached through two
+    providers, counts once.
+
     The gate passes only when, after deduplication:
 
     * at least ``min_verified`` items about ``topic_key`` are
@@ -485,8 +583,10 @@ def evaluate_gate(
     * those items come from at least ``min_independent`` distinct
       independence groups in the registry.
 
-    Refuting verified items are reported but do not silently cancel
-    supporting ones; surfacing disagreement is the caller's job.
+    Verified refuting items from registered sources are reported, and
+    block the answer whenever their count reaches at least half the
+    supporting count (rounded up); below that threshold the conflict
+    is disclosed in the decision warnings instead.
 
     Args:
         items: Candidate evidence items, any topic, any status.
@@ -508,7 +608,15 @@ def evaluate_gate(
     if min_independent < 1:
         raise ValueError("min_independent must be at least 1")
 
-    relevant = [item for item in deduplicate(list(items)) if item.topic_key == topic_key]
+    wanted = normalise_topic_key(topic_key)
+    candidates = list(items)
+    relevant = [
+        item for item in deduplicate(candidates)
+        if normalise_topic_key(item.topic_key) == wanted
+    ]
+    collapsed = sum(
+        1 for item in candidates if normalise_topic_key(item.topic_key) == wanted
+    ) - len(relevant)
     supporting_all = tuple(
         item
         for item in relevant
@@ -522,11 +630,16 @@ def evaluate_gate(
         item for item in supporting_all if item.source_id in registry
     )
     unregistered_count = len(supporting_all) - len(supporting)
-    refuting = tuple(
+    # Refuting evidence obeys the same provenance rule as supporting
+    # evidence: an unregistered source can neither vouch for a claim
+    # nor veto one.
+    refuting_all = tuple(
         item
         for item in relevant
         if item.is_verified and item.direction is SupportDirection.REFUTES
     )
+    refuting = tuple(item for item in refuting_all if item.source_id in registry)
+    unregistered_refuting = len(refuting_all) - len(refuting)
     groups = tuple(
         sorted({registry.independence_group_of(item.source_id) for item in supporting})
     )
@@ -543,6 +656,16 @@ def evaluate_gate(
         warnings.append(
             f"{unregistered_count} verified supporting item(s) were "
             "excluded because their source is not registered"
+        )
+    if unregistered_refuting:
+        warnings.append(
+            f"{unregistered_refuting} verified refuting item(s) were "
+            "excluded because their source is not registered"
+        )
+    if collapsed:
+        warnings.append(
+            f"{collapsed} item(s) cited an evidence line already counted "
+            "and were collapsed; each record counts once"
         )
     failed_count = sum(1 for item in relevant if item.is_failed)
     if failed_count:
@@ -570,15 +693,20 @@ def evaluate_gate(
             f"independent source group(s); the gate requires at "
             f"least {min_independent}"
         )
-    # Hardening (Worker A Bug 5): verified refuting evidence that
-    # matches or outweighs the supporting evidence blocks an answer;
-    # the disagreement must be resolved, not merely disclosed.
-    if refuting and len(refuting) >= len(supporting):
+    # Refuter policy (Founder's call, 2026-11-25, replacing the
+    # earlier match-or-outweigh rule): verified refuting evidence
+    # from registered sources blocks a clean pass whenever the
+    # refuting count reaches at least half the supporting count,
+    # rounded up.  Below that threshold the gate may still pass, but
+    # the conflict is disclosed in the warnings above.
+    refuter_block_threshold = (len(supporting) + 1) // 2
+    if refuting and len(refuting) >= refuter_block_threshold:
         passed = False
         reasons.append(
-            f"{len(refuting)} verified item(s) refute the claim, "
-            f"matching or outweighing the {len(supporting)} "
-            "supporting item(s); disagreement is unresolved"
+            f"{len(refuting)} verified item(s) refute the claim "
+            f"against {len(supporting)} supporting item(s); the "
+            "refuting count reaches half the supporting count, so "
+            "the disagreement blocks a clean pass"
         )
     if passed:
         reasons.append(

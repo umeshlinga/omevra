@@ -93,6 +93,26 @@ GRCH38_ACCESSION_CHROM = {
 Transport = Callable[[str, Optional[dict]], dict]
 
 
+def clinvar_direction(significance: str) -> SupportDirection:
+    """Direction of a ClinVar record relative to a pathogenicity claim.
+
+    The Copilot's implicit claim for a variant topic is that the
+    variant is disease-causing.  A Benign record refutes that; a
+    Pathogenic record supports it; uncertain, conflicting, risk-factor
+    and other classifications are neutral and never count as support.
+    """
+    text = significance.lower()
+    if "conflicting" in text or "uncertain" in text:
+        return SupportDirection.NEUTRAL
+    pathogenic = "pathogenic" in text
+    benign = "benign" in text
+    if pathogenic and not benign:
+        return SupportDirection.SUPPORTS
+    if benign and not pathogenic:
+        return SupportDirection.REFUTES
+    return SupportDirection.NEUTRAL
+
+
 def urllib_transport(url: str, body: Optional[dict] = None) -> dict:
     """Default transport: stdlib urllib, JSON in and out."""
     data = None
@@ -497,7 +517,7 @@ class LiveEvidenceProvider:
                         f"(fetched {stamp} via NCBI E-utilities)"
                     ),
                     kind=EvidenceKind.CURATED_CLASSIFICATION,
-                    direction=SupportDirection.SUPPORTS,
+                    direction=clinvar_direction(significance),
                     status=VerificationStatus.VERIFIED,
                     locator=f"https://www.ncbi.nlm.nih.gov/clinvar/variation/{uid}/",
                 )

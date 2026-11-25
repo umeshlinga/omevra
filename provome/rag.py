@@ -14,13 +14,16 @@ Honesty first, because this module is easy to oversell:
   this file learns anything, and no coverage or accuracy figure is
   claimed for it.  A similarity score here means "these texts share
   weighted vocabulary", nothing more.
-* **Retrieval is not verification.**  A document the index returns
-  is a *candidate*.  It becomes evidence only through the bridge
-  (:func:`evidence_from_retrieval`), and the bridge marks a document
-  verified only when it carries a real, checkable identifier — a
-  PMID in its ``doc_id`` or its URL.  A retrieved document with no
-  such identifier is excluded from the bridge entirely: it may be
-  shown to a human, but it never becomes a gate-countable item.
+* **Retrieval is not verification, and neither is an identifier.**
+  A document the index returns is a *candidate*.  It becomes evidence
+  only through the bridge (:func:`evidence_from_retrieval`).  The
+  bridge requires a well-formed PMID (a whole ``pmid:<digits>`` id or
+  a PubMed / Europe PMC URL); documents without one are excluded.  A
+  PMID-shaped string proves nothing by itself, so bridge items are
+  UNVERIFIED unless a :class:`PmidVerifier` has resolved the PMID at
+  the source and matched the title (:class:`EuropePmcPmidVerifier`
+  does this against Europe PMC).  The bridge also sets the item's
+  source itself: a document cannot declare itself to be ClinVar.
 * **The gate is unchanged.**  Bridge items are ordinary
   :class:`~provome.evidence.EvidenceItem` objects; the cite-or-decline
   gate in :mod:`provome.evidence` judges them exactly as it judges
@@ -61,7 +64,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 from datetime import date
-from typing import Iterable, Optional, Protocol, Sequence, runtime_checkable
+from typing import Callable, Iterable, Optional, Protocol, Sequence, runtime_checkable
 
 from .evidence import (
     EvidenceItem,
@@ -77,7 +80,15 @@ __all__ = [
     "RetrievalIndex",
     "document_pmid",
     "evidence_from_retrieval",
+    "PmidVerifier",
+    "EuropePmcPmidVerifier",
+    "LITERATURE_SOURCE_ID",
 ]
+
+#: The only source the literature bridge emits.  A PMID identifies a
+#: PubMed record, so whatever a document's ``source`` field says, a
+#: PMID-backed item is primary literature.
+LITERATURE_SOURCE_ID = "pubmed-literature"
 
 
 @dataclass(frozen=True)
@@ -313,9 +324,18 @@ class RetrievalIndex:
         return scored[:k]
 
 
-_PMID_IN_ID_RE = re.compile(r"pmid[:_-]?(\d{4,10})", re.IGNORECASE)
+# Anchored: the whole doc_id must be a PMID, so "notpmid-1234-xyz"
+# or "lab-pmid1234-copy" do not qualify.  PMIDs are 1-9 digits today;
+# no leading zeros.
+_PMID_IN_ID_RE = re.compile(r"^pmid[:_-]?([1-9]\d{0,8})$", re.IGNORECASE)
+# Only canonical record URLs at PubMed or Europe PMC count; a
+# "pmid=" parameter on an arbitrary host does not.
 _PMID_IN_URL_RE = re.compile(
-    r"(?:pubmed\.ncbi\.nlm\.nih\.gov/|pmid=)(\d{4,10})", re.IGNORECASE
+    r"^https?://(?:"
+    r"pubmed\.ncbi\.nlm\.nih\.gov/([1-9]\d{0,8})"
+    r"|(?:www\.)?europepmc\.org/(?:abstract|article)/MED/([1-9]\d{0,8})"
+    r")/?(?:[?#].*)?$",
+    re.IGNORECASE,
 )
 
 
@@ -328,14 +348,87 @@ def document_pmid(document: Document) -> Optional[str]:
     identifier a reader can type into PubMed and land on this exact
     record, or nothing.
     """
-    match = _PMID_IN_ID_RE.search(document.doc_id)
+    match = _PMID_IN_ID_RE.match(document.doc_id.strip())
     if match:
         return match.group(1)
     if document.url:
-        match = _PMID_IN_URL_RE.search(document.url)
+        match = _PMID_IN_URL_RE.match(document.url.strip())
         if match:
-            return match.group(1)
+            return match.group(1) or match.group(2)
     return None
+
+
+@runtime_checkable
+class PmidVerifier(Protocol):
+    """Checks a PMID against the record it claims to be.
+
+    ``verify(pmid, title)`` returns:
+
+    * ``True``  – the PMID resolves at the source and the record's
+      title matches ``title``: the item may be VERIFIED;
+    * ``False`` – the check ran and failed (no such record, or a
+      different paper): the item is FAILED and can never be cited;
+    * ``None``  – the check could not run (network error, rate
+      limit): the item stays UNVERIFIED.
+    """
+    def verify(self, pmid: str, title: str) -> Optional[bool]:
+        ...
+
+
+def _title_tokens(text: str) -> set[str]:
+    return {t for t in re.findall(r"[a-z0-9]+", text.lower()) if len(t) > 2}
+
+
+def title_similarity(a: str, b: str) -> float:
+    """Jaccard overlap of title word tokens, in [0, 1]."""
+    ta, tb = _title_tokens(a), _title_tokens(b)
+    if not ta or not tb:
+        return 0.0
+    return len(ta & tb) / len(ta | tb)
+
+
+class EuropePmcPmidVerifier:
+    """Resolve a PMID at Europe PMC and compare titles.
+
+    Args:
+        transport: ``transport(url, body) -> dict``; defaults to
+            :func:`provome.live.urllib_transport`.  Tests inject one.
+        min_title_similarity: Minimum title token overlap for the
+            record to count as the same paper.
+    """
+
+    def __init__(
+        self,
+        transport: Optional[Callable[[str, Optional[dict]], dict]] = None,
+        min_title_similarity: float = 0.6,
+    ) -> None:
+        if transport is None:
+            from .live import urllib_transport  # lazy: avoids an import cycle
+            transport = urllib_transport
+        if not 0.0 < min_title_similarity <= 1.0:
+            raise ValueError("min_title_similarity must be in (0, 1]")
+        self.transport = transport
+        self.min_title_similarity = min_title_similarity
+
+    def verify(self, pmid: str, title: str) -> Optional[bool]:
+        from urllib.parse import quote
+        from .live import EUROPEPMC
+        url = (
+            f"{EUROPEPMC}?query={quote(f'EXT_ID:{pmid} AND SRC:MED')}"
+            "&format=json&resultType=lite&pageSize=1"
+        )
+        try:
+            payload = self.transport(url, None)
+        except Exception:
+            return None
+        results = (payload or {}).get("resultList", {}).get("result", [])
+        record = next((r for r in results if str(r.get("pmid")) == pmid), None)
+        if record is None:
+            return False
+        return (
+            title_similarity(record.get("title", ""), title)
+            >= self.min_title_similarity
+        )
 
 
 def evidence_from_retrieval(
@@ -345,18 +438,26 @@ def evidence_from_retrieval(
     topic_key: str,
     k: int = 5,
     min_score: float = 0.0,
+    verifier: Optional[PmidVerifier] = None,
 ) -> list[EvidenceItem]:
-    """Turn top retrieved, identifier-carrying documents into evidence.
+    """Turn top retrieved, PMID-carrying documents into evidence.
 
-    The bridge rule, stated plainly: **a retrieved document becomes a
-    VERIFIED evidence item only when it carries a real identifier —
-    a PMID in its ``doc_id`` or its URL** (see :func:`document_pmid`).
-    Retrieval similarity is a ranking signal, never a verification
-    signal: a high score says the text looks relevant, it does not
-    say the record exists.  Documents without a PMID are excluded
-    here, however well they scored; a human can still read them via
-    :meth:`RetrievalIndex.search`, but they never reach the gate
-    through this bridge.
+    The bridge rules, stated plainly:
+
+    1. Only documents carrying a well-formed PMID (see
+       :func:`document_pmid`) become items; others are excluded,
+       however well they scored.
+    2. The item's source is always :data:`LITERATURE_SOURCE_ID`, set
+       here.  A document whose ``source`` field names any other
+       source is excluded: a PMID is a literature identifier, and a
+       document cannot borrow another database's independence group
+       by labelling itself.
+    3. Status comes from ``verifier`` only.  Without a verifier every
+       item is UNVERIFIED (visible to a human, never counted by the
+       gate).  With one, ``True`` gives VERIFIED, ``False`` gives
+       FAILED, ``None`` leaves it UNVERIFIED.  Retrieval similarity is
+       never a verification signal, and neither is the identifier's
+       shape.
 
     Args:
         index: The index to search.
@@ -367,9 +468,10 @@ def evidence_from_retrieval(
             items that share it.
         k: Maximum documents to consider from the search.
         min_score: Drop retrieved documents scoring below this.
+        verifier: Resolves each PMID at its source.  Optional.
 
     Returns:
-        Verified :class:`EvidenceItem` objects, in retrieval order.
+        :class:`EvidenceItem` objects, in retrieval order.
     """
     if not topic_key or not topic_key.strip():
         raise ValueError("topic_key must be a non-empty string")
@@ -380,6 +482,24 @@ def evidence_from_retrieval(
         pmid = document_pmid(document)
         if pmid is None:
             continue
+        if document.source != LITERATURE_SOURCE_ID:
+            continue
+        outcome = verifier.verify(pmid, document.title) if verifier else None
+        if outcome is True:
+            status = VerificationStatus.VERIFIED
+            check = f"PMID {pmid} resolved at the source and the title matched"
+        elif outcome is False:
+            status = VerificationStatus.FAILED
+            check = (
+                f"PMID {pmid} did not resolve to a record with this title; "
+                "the item can never be cited"
+            )
+        else:
+            status = VerificationStatus.UNVERIFIED
+            check = (
+                f"PMID {pmid} has not been resolved at the source; "
+                "unverified items do not count toward the gate"
+            )
         items.append(
             EvidenceItem(
                 item_id=f"rag-pmid-{pmid}",
@@ -388,24 +508,18 @@ def evidence_from_retrieval(
                     f"Peer-reviewed literature reports: "
                     f"\"{document.title.rstrip('.')}\""
                 ),
-                source_id=document.source,
+                source_id=LITERATURE_SOURCE_ID,
                 citation=(
                     f"PMID {pmid} (indexed copy fetched "
                     f"{document.fetched_on.isoformat()})"
                 ),
                 kind=EvidenceKind.LITERATURE_REPORT,
                 direction=SupportDirection.SUPPORTS,
-                status=VerificationStatus.VERIFIED,
-                locator=(
-                    document.url
-                    or f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
-                ),
+                status=status,
+                locator=f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
                 notes=(
                     f"retrieved from the local index with similarity "
-                    f"score {score:.3f}; marked verified under the "
-                    f"bridge rule because the document carries PMID "
-                    f"{pmid} — the identifier, not the score, is the "
-                    f"verification"
+                    f"score {score:.3f}; {check}"
                 ),
             )
         )
@@ -524,12 +638,13 @@ def _demo() -> None:
         k=5,
     )
     print(
-        f"Bridge: {len(items)} verified evidence item(s) for "
-        "CFTR:p.Phe508del (the notebook entry, though retrieved, "
-        "carries no PMID and is excluded):"
+        f"Bridge: {len(items)} evidence item(s) for CFTR:p.Phe508del, "
+        "all UNVERIFIED because no PMID verifier was supplied (the "
+        "fixture PMIDs are not real records). The notebook entry, "
+        "though retrieved, carries no PMID and is excluded:"
     )
     for item in items:
-        print(f"  - {item.citation_label()}")
+        print(f"  - [{item.status.value}] {item.citation_label()}")
     print()
 
 

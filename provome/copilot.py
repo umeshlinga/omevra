@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Protocol, Sequence, runtime_checkable
@@ -58,6 +58,7 @@ from .evidence import (
     SupportDirection,
     VerificationStatus,
     default_source_registry,
+    demo_source_registry,
     evaluate_gate,
 )
 
@@ -371,6 +372,38 @@ class DisabledLLMHook:
         )
 
 
+# Identifiers and numbers a narrative might introduce.  Every one it
+# uses must already appear in a gated claim or its citation; anything
+# else is an assertion the gate never saw.
+_NARRATIVE_TOKEN_RE = re.compile(
+    r"\bPMID[\s:#]*\d+|\bVCV\d+|\brs\d+|\bCHEMBL\d+|\bOMIM[\s:#]*\d+"
+    r"|\b\d+(?:\.\d+)?\s*%|\b\d+(?:\.\d+)?(?:e-?\d+)?\b",
+    re.IGNORECASE,
+)
+
+
+def ungrounded_narrative_tokens(
+    narrative: str, claims: Sequence["Claim"]
+) -> list[str]:
+    """Identifiers/numbers in ``narrative`` that no gated claim contains.
+
+    This is a necessary check, not a sufficient one: a narrative that
+    passes may still paraphrase badly, which is why it is shown beside
+    the cited claims rather than in place of them.
+    """
+    grounded = " ".join(
+        [c.statement for c in claims] + [cite for c in claims for cite in c.citations]
+    )
+    norm = lambda t: re.sub(r"[\s:#]+", "", t).lower()
+    grounded_norm = norm(grounded)
+    missing: list[str] = []
+    for match in _NARRATIVE_TOKEN_RE.finditer(narrative):
+        token = match.group(0)
+        if norm(token) not in grounded_norm and token not in missing:
+            missing.append(token)
+    return missing
+
+
 def _confidence(gate: GateDecision) -> float:
     """Heuristic confidence for a passed gate, in [0, 1].
 
@@ -407,7 +440,15 @@ class Copilot:
         use_llm: bool = False,
     ) -> None:
         self.provider = provider if provider is not None else OfflineDemoProvider()
-        self.registry = registry if registry is not None else default_source_registry()
+        if registry is None:
+            # Illustrative sources are registered only when the
+            # bundled demo provider is the one supplying evidence.
+            registry = (
+                demo_source_registry()
+                if isinstance(self.provider, OfflineDemoProvider)
+                else default_source_registry()
+            )
+        self.registry = registry
         self.llm_hook = llm_hook
         self.use_llm = bool(use_llm)
         if self.use_llm and self.llm_hook is None:
@@ -541,8 +582,19 @@ class Copilot:
             return answer
         if not answer.answered:
             return answer
-        assert self.llm_hook is not None
+        if self.llm_hook is None:  # explicit check: asserts vanish under -O
+            raise RuntimeError("use_llm is set but no llm_hook is configured")
         narrative = self.llm_hook.rephrase(answer)
+        ungrounded = ungrounded_narrative_tokens(narrative, answer.claims)
+        if ungrounded:
+            return replace(
+                answer,
+                warnings=answer.warnings + (
+                    "LLM narrative withheld: it cites identifier(s) or "
+                    "number(s) not present in the gated claims: "
+                    + ", ".join(ungrounded[:10]),
+                ),
+            )
         return CopilotAnswer(
             verdict=answer.verdict,
             question=answer.question,

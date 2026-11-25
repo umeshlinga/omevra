@@ -129,7 +129,7 @@ def test_bridge_excludes_documents_without_pmid():
     assert all(item.citation.startswith("PMID ") for item in items)
 
 
-def test_bridge_items_are_verified_gate_compatible_evidence():
+def test_bridge_items_are_unverified_without_a_verifier():
     index = _index()
     items = evidence_from_retrieval(
         index,
@@ -139,17 +139,36 @@ def test_bridge_items_are_verified_gate_compatible_evidence():
     )
     assert items
     for item in items:
-        assert item.status is VerificationStatus.VERIFIED
+        # A PMID-shaped id is not verification: nothing was resolved.
+        assert item.status is VerificationStatus.UNVERIFIED
         assert item.topic_key == "CFTR:p.Phe508del"
         assert item.source_id == "pubmed-literature"
         assert item.locator and "pubmed" in item.locator
-    # The gate can consume them unmodified.  They all share one
-    # independence group (primary literature), so the gate declines
-    # on independence — the bridge does not inflate its way past it.
+    decision = evaluate_gate(items, "CFTR:p.Phe508del")
+    assert decision.verified_count == 0
+    assert not decision.passed
+
+
+def test_bridge_items_verified_only_through_a_verifier():
+    class AcceptAll:
+        def verify(self, pmid, title):
+            return True
+
+    index = _index()
+    items = evidence_from_retrieval(
+        index,
+        "CFTR Phe508del folding corrector trafficking",
+        topic_key="CFTR:p.Phe508del",
+        k=5,
+        verifier=AcceptAll(),
+    )
+    assert items
+    assert all(item.status is VerificationStatus.VERIFIED for item in items)
+    # They all share one independence group (primary literature), so
+    # the gate still declines on independence.
     decision = evaluate_gate(items, "CFTR:p.Phe508del")
     assert decision.verified_count == len(items)
     assert not decision.passed
-    assert any("independent" in reason for reason in decision.reasons)
 
 
 def test_neural_style_embedder_plugs_in_without_observe():
