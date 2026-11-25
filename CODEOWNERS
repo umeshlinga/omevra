@@ -1,0 +1,29 @@
+# CODEOWNERS — Provome
+#
+# The gate code, the test suite, and the evaluation fixtures are
+# assigned to the Founder. Changes to these files require the
+# Founder's review; see the red lines in CLAUDE.md and the
+# pre-commit guard in scripts/precommit_guard.py.
+# Owner: @umeshlinga (from the repository remote:
+# https://github.com/umeshlinga/provome)
+
+# Evidence gate and its confirmation layer
+provome/evidence.py            @umeshlinga
+provome/confirmation.py        @umeshlinga
+
+# Test suite (all of it; the fraud battery is named explicitly)
+tests/                         @umeshlinga
+tests/test_fraud_battery.py    @umeshlinga
+tests/test_gate_hardening.py   @umeshlinga
+
+# Evaluation / gold fixtures and benchmark definitions
+provome/data/                  @umeshlinga
+provome/data/demo_evidence.json @umeshlinga
+provome/data/examples.json     @umeshlinga
+provome/benchmark.py           @umeshlinga
+provome/animal_benchmark.py    @umeshlinga
+provome/plant_benchmark.py     @umeshlinga
+tests/test_benchmark.py        @umeshlinga
+tests/test_animal_benchmark.py @umeshlinga
+tests/test_plant_benchmark.py  @umeshlinga
+multi-agent-evidence/assets/eval_set.csv @umeshlinga

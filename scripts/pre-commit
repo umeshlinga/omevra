@@ -1,0 +1,8 @@
+#!/bin/sh
+# Provome pre-commit hook wrapper.
+# Install (per clone):  cp scripts/pre-commit .git/hooks/pre-commit
+#                       chmod +x .git/hooks/pre-commit
+# The real logic lives in scripts/precommit_guard.py so it can be
+# run and tested directly. Founder override:
+#   PROVOME_FOUNDER_OVERRIDE=1 git commit ...
+exec python3 "$(git rev-parse --show-toplevel)/scripts/precommit_guard.py" --staged
