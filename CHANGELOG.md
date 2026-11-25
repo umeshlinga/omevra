@@ -3,6 +3,19 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.10.0] - 2026-11-25
+
+Disease corps (Founder's direction): `provome/diseases.py` gives
+every major disease area its own corps of 5,000 researchers with
+distinct (focus, function, beat) assignments. First wave deployed
+and verified: 10 corps, 50,000 researchers - Human: oncology,
+cardiovascular, infectious diseases (COVID-19 a named focus),
+neurological, rare diseases, metabolic; Animal: infectious,
+genetic; Plant: pathology, crop resistance. Cancer/oncology/
+tumour form ONE Oncology corps (same field; the company's
+no-duplicate law). Corps stand up per disease through the stage
+gates via the generic builder. Suite 289.
+
 ## [0.9.0] - 2026-11-25
 
 Research Division deployed (Founder's direction): `provome/research.py`
