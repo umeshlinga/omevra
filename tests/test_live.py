@@ -19,7 +19,26 @@ from provome.live import (
 FIXED_DATE = date(2026, 11, 25)
 
 
+_PUBMED_TITLES = {
+    "11111111": "Sickle cell disease review.",
+    "22222222": "HBB variant cohort study.",
+}
+
+
+def pubmed_fixture(url):
+    """Honest PubMed (db=pubmed esummary) for the fixture world:
+    the PMIDs the Europe PMC fixture serves resolve, with the
+    same titles; anything else does not exist."""
+    pmid = url.rsplit("id=", 1)[1]
+    title = _PUBMED_TITLES.get(pmid)
+    if title is None:
+        return {"result": {"uids": []}}
+    return {"result": {"uids": [pmid], pmid: {"title": title}}}
+
+
 def fixture_transport(url, body=None):
+    if "esummary" in url and "db=pubmed" in url:
+        return pubmed_fixture(url)
     if "esearch" in url:
         return {"esearchresult": {"idlist": ["15333"]}}
     if "esummary" in url:

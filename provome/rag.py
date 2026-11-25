@@ -20,10 +20,15 @@ Honesty first, because this module is easy to oversell:
   bridge requires a well-formed PMID (a whole ``pmid:<digits>`` id or
   a PubMed / Europe PMC URL); documents without one are excluded.  A
   PMID-shaped string proves nothing by itself, so bridge items are
-  UNVERIFIED unless a :class:`PmidVerifier` has resolved the PMID at
-  the source and matched the title (:class:`EuropePmcPmidVerifier`
-  does this against Europe PMC).  The bridge also sets the item's
-  source itself: a document cannot declare itself to be ClinVar.
+  UNVERIFIED unless a check has resolved the PMID at the source and
+  matched the title.  The bridge accepts that check in two
+  spellings: a :class:`PmidVerifier`
+  (:class:`EuropePmcPmidVerifier` resolves against Europe PMC) or a
+  confirmer callable — the production standard being the
+  independent PubMed re-confirmation in
+  :mod:`provome.confirmation`, the same check the live providers
+  are held to.  The bridge also sets the item's source itself: a
+  document cannot declare itself to be ClinVar.
 * **The gate is unchanged.**  Bridge items are ordinary
   :class:`~provome.evidence.EvidenceItem` objects; the cite-or-decline
   gate in :mod:`provome.evidence` judges them exactly as it judges
@@ -439,10 +444,12 @@ def evidence_from_retrieval(
     k: int = 5,
     min_score: float = 0.0,
     verifier: Optional[PmidVerifier] = None,
+    confirmer: Optional[Callable[[str, str], VerificationStatus]] = None,
 ) -> list[EvidenceItem]:
     """Turn top retrieved, PMID-carrying documents into evidence.
 
-    The bridge rules, stated plainly:
+    The bridge rules, stated plainly (gate hardening, reconciled
+    2026-11-25):
 
     1. Only documents carrying a well-formed PMID (see
        :func:`document_pmid`) become items; others are excluded,
@@ -452,12 +459,30 @@ def evidence_from_retrieval(
        source is excluded: a PMID is a literature identifier, and a
        document cannot borrow another database's independence group
        by labelling itself.
-    3. Status comes from ``verifier`` only.  Without a verifier every
-       item is UNVERIFIED (visible to a human, never counted by the
-       gate).  With one, ``True`` gives VERIFIED, ``False`` gives
-       FAILED, ``None`` leaves it UNVERIFIED.  Retrieval similarity is
-       never a verification signal, and neither is the identifier's
-       shape.
+    3. Status comes from an actual check, never from the
+       identifier's shape and never from the retrieval score.  Two
+       spellings of the check are accepted:
+
+       * ``confirmer`` — a ``(pmid, title) -> VerificationStatus``
+         callable, such as
+         :func:`provome.confirmation.make_pubmed_confirmer`, which
+         independently re-confirms the PMID against PubMed (NCBI,
+         a different operator than the Europe PMC search feed) and
+         requires the titles to match.  This is the production
+         standard, the same one the live providers are held to.
+         The confirmer's status is carried as returned and never
+         silently upgraded.
+       * ``verifier`` — a :class:`PmidVerifier` whose
+         ``verify(pmid, title)`` returns ``True`` (VERIFIED),
+         ``False`` (FAILED) or ``None`` (UNVERIFIED).
+
+       With neither supplied, every item is UNVERIFIED: visible to
+       a human, never counted by the gate.  An earlier bridge rule
+       trusted corpus ingest and marked identifier-carrying
+       documents VERIFIED on shape alone; the red-team review
+       (2026-11-25) showed fabricated PMIDs passing under it, and
+       the reconciliation of the two hardening efforts retired it
+       in favour of this rule.
 
     Args:
         index: The index to search.
@@ -468,13 +493,22 @@ def evidence_from_retrieval(
             items that share it.
         k: Maximum documents to consider from the search.
         min_score: Drop retrieved documents scoring below this.
-        verifier: Resolves each PMID at its source.  Optional.
+        verifier: Resolves each PMID at its source.  Optional;
+            mutually exclusive with ``confirmer``.
+        confirmer: Optional live re-confirmation callable; see
+            rule 3 above.  Mutually exclusive with ``verifier``.
 
     Returns:
         :class:`EvidenceItem` objects, in retrieval order.
     """
     if not topic_key or not topic_key.strip():
         raise ValueError("topic_key must be a non-empty string")
+    if verifier is not None and confirmer is not None:
+        raise ValueError(
+            "pass at most one of verifier and confirmer: both spell "
+            "the same check, and accepting two verdicts would leave "
+            "the item's status ambiguous"
+        )
     items: list[EvidenceItem] = []
     for document, score in index.search(query, k=k):
         if score < min_score:
@@ -484,16 +518,33 @@ def evidence_from_retrieval(
             continue
         if document.source != LITERATURE_SOURCE_ID:
             continue
-        outcome = verifier.verify(pmid, document.title) if verifier else None
-        if outcome is True:
-            status = VerificationStatus.VERIFIED
-            check = f"PMID {pmid} resolved at the source and the title matched"
-        elif outcome is False:
-            status = VerificationStatus.FAILED
+        if confirmer is not None:
+            status = confirmer(pmid, document.title)
             check = (
-                f"PMID {pmid} did not resolve to a record with this title; "
-                "the item can never be cited"
+                f"independently re-confirmed via the supplied "
+                f"confirmer, which returned {status.value}"
             )
+        elif verifier is not None:
+            outcome = verifier.verify(pmid, document.title)
+            if outcome is True:
+                status = VerificationStatus.VERIFIED
+                check = (
+                    f"PMID {pmid} resolved at the source and the "
+                    "title matched"
+                )
+            elif outcome is False:
+                status = VerificationStatus.FAILED
+                check = (
+                    f"PMID {pmid} did not resolve to a record with "
+                    "this title; the item can never be cited"
+                )
+            else:
+                status = VerificationStatus.UNVERIFIED
+                check = (
+                    f"PMID {pmid} could not be resolved at the "
+                    "source; unverified items do not count toward "
+                    "the gate"
+                )
         else:
             status = VerificationStatus.UNVERIFIED
             check = (

@@ -15,7 +15,19 @@ from provome.copilot import Copilot, CopilotQuestion, Verdict
 FIXED = date(2026, 11, 25)
 
 
+_PUBMED_TITLES = {
+    "11111111": "ABCB1 mutation and drug sensitivity in Collies.",
+    "22222222": "MDR1 genotyping in herding breed dogs.",
+}
+
+
 def fixture_transport(url, body=None):
+    if "esummary" in url and "db=pubmed" in url:
+        pmid = url.rsplit("id=", 1)[1]
+        title = _PUBMED_TITLES.get(pmid)
+        if title is None:
+            return {"result": {"uids": []}}
+        return {"result": {"uids": [pmid], pmid: {"title": title}}}
     if "lookup/symbol/canis_lupus_familiaris/ABCB1" in url:
         return {
             "id": "ENSCAFG00000000001",
