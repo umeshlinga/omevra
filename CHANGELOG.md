@@ -3,6 +3,23 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.17.0] - 2026-11-25
+
+Three-doors packaging v1 (roadmap Item 31 in installable
+form). `provome/doors.py`: thin wiring only - a test greps
+the module to prove no gate logic lives there. Three console
+scripts, `provome-human`, `provome-animal`, `provome-plant`,
+each wiring only its own division's copilot, boundary, and
+three benchmark-verified examples; every output framed as
+its door, and cross-division questions decline through the
+door layer in both directions (suite-tested, clean-install
+verified). Honest limit, stated in the release: the doors
+ship in one wheel by design (one engine); the per-door
+extras are name markers today, not separate distributions,
+and packaging a door is not a coverage claim - Animal and
+Plant boundaries still say coverage is NOT claimed.
+Suite 361.
+
 ## [0.16.0] - 2026-11-25
 
 Plant benchmark v1 + two provider fixes it forced.

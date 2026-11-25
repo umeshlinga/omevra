@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "provome"
-version = "0.16.0"
-description = "Provome: an evidence engine for biology across Human, Animal, and Plant divisions, with the Provome Copilot and a cite-or-decline evidence gate."
+version = "0.17.0"
+description = "Provome: one evidence engine with a cite-or-decline gate, shipped as three separate division products - Provome Human (provome-human), Provome Animal (provome-animal), and Provome Plant (provome-plant)."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Proprietary - research software, all rights reserved" }
@@ -31,9 +31,22 @@ dependencies = []
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
+# The three doors (Item 31): one engine, three division products.
+# Each door extra names one product split; today all three doors
+# ship in the single wheel (they share the one engine by design),
+# so the extras carry no extra dependencies - they exist so the
+# product split is visible and installable by name, e.g.
+# `pip install provome[animal]`.
+human = []
+animal = []
+plant = []
+all-doors = []
 
 [project.scripts]
 provome-copilot = "provome.copilot:main"
+provome-human = "provome.doors:human_main"
+provome-animal = "provome.doors:animal_main"
+provome-plant = "provome.doors:plant_main"
 
 [tool.setuptools]
 packages = ["provome"]
