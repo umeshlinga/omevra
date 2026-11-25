@@ -1,4 +1,4 @@
-/* Ask Omevra — static retrieval over the site's own library.
+/* Ask Provome — static retrieval over the site's own library.
    No external calls and no key: answers come only from ask-index.json,
    which is built from this site's pages. Out-of-corpus questions get
    the plain decline. */
@@ -49,11 +49,11 @@
     if (!best || bestScore < 5 || !best._kw) return { declined: true, text: index.decline || DECLINE };
     return { declined: false, text: best.answer, sourceTitle: best.title, sourceUrl: best.source, score: bestScore };
   }
-  root.OmevraAsk = { answerQuestion: answerQuestion, tokenize: tokenize, DECLINE: DECLINE };
-  if (typeof module !== "undefined" && module.exports) { module.exports = root.OmevraAsk; }
+  root.ProvomeAsk = { answerQuestion: answerQuestion, tokenize: tokenize, DECLINE: DECLINE };
+  if (typeof module !== "undefined" && module.exports) { module.exports = root.ProvomeAsk; }
   if (typeof document === "undefined") return;
   document.addEventListener("DOMContentLoaded", function () {
-    var box = document.getElementById("ask-omevra");
+    var box = document.getElementById("ask-provome");
     if (!box) return;
     var panel = box.querySelector(".ask-panel");
     var msgs = box.querySelector(".ask-msgs");
