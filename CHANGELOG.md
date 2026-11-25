@@ -3,6 +3,18 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.9.0] - 2026-11-25
+
+Research Division deployed (Founder's direction): `provome/research.py`
+registers 5,000 scientific researcher units in the orchestra -
+Human 2,000, Animal 1,000, Plant 1,000, Drug Discovery 600,
+cross-division Bridge 400 - each with a unique (specialty, beat)
+assignment across 50 specialties, one senior research lead per
+hundred. Units are honest by construction: asked to run without a
+live dispatched assignment, a unit reports exactly that and
+produces no claims. Registration is the organisation standing up,
+not a claim of completed research. Suite 286.
+
 ## [0.8.0] - 2026-11-25
 
 LLM track Stage A + Animal division v1 + a division-scoping fix.
