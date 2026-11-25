@@ -3,6 +3,27 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.15.0] - 2026-11-25
+
+Animal benchmark v1 + a production bug it caught and we
+fixed the same day. `provome/animal_benchmark.py`: 21 frozen
+probes with recorded ground truth (11 ANSWER cases from real
+OMIA associations, 10 DECLINE traps including fabricated
+genes, wrong-species genes, and one real association v1
+honestly cannot reach); the harness re-audits the gate
+arithmetic per probe, and a rigged always-answer provider
+fails it. Fixture score 21/21 - a smoke benchmark, NOT
+external validation; coverage wording unchanged. THE BUG:
+Ensembl phenotype items never fired in production - the
+parser read a nested payload shape that existed only in an
+invented test fixture, while the real API serves the
+description at the entry's top level with a plain-string
+source. Every real OMIA phenotype association was silently
+dropped. Fixed in `provome/animal.py`, the fixture corrected
+to the recorded real shape, a verbatim-payload regression
+test added, and the fix live-verified (equine PRKDC now
+returns its SCID phenotype association). Suite 328.
+
 ## [0.14.0] - 2026-11-25
 
 Plant division v1 + the flagship's gnomAD fix (Step 3b).

@@ -25,14 +25,25 @@ def fixture_transport(url, body=None):
             "description": "ATP binding cassette subfamily B member 1",
         }
     if "phenotype/gene/canis_lupus_familiaris" in url:
+        # REAL recorded payload shape (Ensembl REST, 2026-11-25):
+        # description at the entry's top level, source a plain
+        # string. The previous fixture invented a nested
+        # {"phenotype": {"description": ...}} shape that hid a
+        # production bug - the benchmark caught it; never again.
         return [
             {
-                "phenotype": {"description": "Ivermectin sensitivity"},
-                "source": {"name": "OMIA"},
+                "source": "OMIA",
+                "location": "11:1111111-2222222",
+                "description": "Ivermectin sensitivity",
+                "attributes": {"external_id": "OMIA001234"},
+                "Gene": "ENSCAFG00000000001",
             },
             {
-                "phenotype": {"description": "Drug sensitivity (MDR1)"},
-                "source": {"name": "OMIA"},
+                "source": "OMIA",
+                "location": "11:1111111-2222222",
+                "description": "Drug sensitivity (MDR1)",
+                "attributes": {"external_id": "OMIA001235"},
+                "Gene": "ENSCAFG00000000001",
             },
         ]
     if "europepmc" in url:
@@ -190,3 +201,47 @@ def test_division_scope_guard_both_directions():
         )
     )
     assert animal_q.verdict is Verdict.DECLINE
+
+
+def test_phenotype_items_fire_on_real_recorded_payload():
+    """Regression (2026-11-25): the verbatim payload Ensembl
+    served live for equine PRKDC (SCID, OMIA000220) must produce
+    a phenotype item. Before the fix this shape yielded zero
+    items in production while the invented fixture passed."""
+
+    recorded = [
+        {
+            "source": "OMIA",
+            "location": "9:36236425-36438594",
+            "description": (
+                "Severe combined immunodeficiency disease, "
+                "autosomal, PRKDC-related"
+            ),
+            "attributes": {"external_id": "OMIA000220"},
+            "Gene": "ENSECAG00000020168",
+        }
+    ]
+
+    def transport(url, body=None):
+        if "lookup/symbol/equus_caballus/PRKDC" in url:
+            return {
+                "id": "ENSECAG00000020168",
+                "display_name": "PRKDC",
+                "biotype": "protein_coding",
+                "assembly_name": "EquCab3.0",
+                "description": "protein kinase, DNA-activated",
+            }
+        if "phenotype/gene/equus_caballus" in url:
+            return recorded
+        if "europepmc" in url:
+            return {"resultList": {"result": []}}
+        raise AssertionError(url)
+
+    provider = AnimalEvidenceProvider(
+        transport=transport, today=lambda: FIXED
+    )
+    items = provider.items_for_topic("animal:horse:PRKDC")
+    pheno = [i for i in items if "phenotype association" in i.statement]
+    assert len(pheno) == 1
+    assert "Severe combined immunodeficiency" in pheno[0].statement
+    assert "(source: OMIA)" in pheno[0].statement

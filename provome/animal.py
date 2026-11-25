@@ -330,12 +330,23 @@ class AnimalEvidenceProvider:
         for entry in payload:
             if not isinstance(entry, dict):
                 continue
-            phenotype = entry.get("phenotype")
-            if isinstance(phenotype, dict):
-                description = phenotype.get("description", "")
-            else:
-                description = str(phenotype or "")
-            description = description.strip()
+            # Real payload shape (verified live 2026-11-25 against
+            # recorded Ensembl responses): the description sits at
+            # the entry's TOP level and "source" is a plain string
+            # ("OMIA"). The original code read a nested
+            # entry["phenotype"]["description"] shape that exists
+            # only in an old test fixture, so every real phenotype
+            # association was silently dropped - found by the
+            # Animal benchmark v1, fixed same day. The nested
+            # fallbacks stay for robustness; the top level wins.
+            description = entry.get("description", "")
+            if not description:
+                phenotype = entry.get("phenotype")
+                if isinstance(phenotype, dict):
+                    description = phenotype.get("description", "")
+                elif phenotype:
+                    description = str(phenotype)
+            description = str(description).strip()
             if not description or description in seen:
                 continue
             seen.add(description)
@@ -343,6 +354,8 @@ class AnimalEvidenceProvider:
             source = entry.get("source")
             if isinstance(source, dict):
                 source_name = source.get("name", "")
+            elif source:
+                source_name = str(source)
             items.append(
                 EvidenceItem(
                     item_id=(
