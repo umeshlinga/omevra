@@ -3,6 +3,35 @@
 All notable changes to Omevra are recorded here. Versions follow
 semantic versioning.
 
+## [0.3.0] - 2026-11-25
+
+Step 3: the live brain. The Copilot gains its own browser
+(`omevra.live.LiveEvidenceProvider`, Item 22): at question time it
+fetches real records from ClinVar (NCBI E-utilities), gnomAD (Broad
+GraphQL, when the ClinVar record supplies usable coordinates), and
+Europe PMC literature, and answers only from what actually came
+back — every citation carries its record id and fetch date.
+
+### Added
+- Intent validation: a topic is recognised only when the question
+  names a gene AND an HGVS-like variant; everything else declines
+  (closes the Step 1 Worker A residual finding for the live path).
+- ClinVar record verification: loose search hits are filtered to
+  the exact variant (title / protein-change match), multi-variant
+  haplotype records are rejected, and legacy protein numbering is
+  reconciled (literature HBB p.Glu6Val = ClinVar p.Glu7Val), with
+  both three-letter and one-letter spellings searched.
+- Live demos verified end-to-end: CFTR p.Phe508del ANSWER from the
+  real ClinVar record (Pathogenic, Variation ID 4072070) plus live
+  literature; HBB p.Glu6Val ANSWER (Variation ID 15333); weather
+  question DECLINE.
+- 6 fixture-based tests (no network in CI). Suite: 230 passed.
+
+### Known limitation
+- ClinVar's summary feed does not expose ref/alt alleles, so the
+  gnomAD item fires only when coordinates are otherwise available;
+  an allele-resolution source (dbSNP cross-reference) is Step 3b.
+
 ## [0.2.1] - 2026-11-25
 
 Step 1 hardening round. Three senior test workers ran adversarial,
