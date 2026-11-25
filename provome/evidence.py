@@ -195,11 +195,11 @@ class SourceRegistry:
 def default_source_registry() -> SourceRegistry:
     """Build the registry of sources Provome knows about out of the box.
 
-    These are real, well known resources in human genetics.  Listing a
-    source here does not mean this package queries it; the offline
-    package ships no live database access (see the README).  The
-    registry only describes provenance for evidence items that a
-    provider supplies.
+    These are real, well known resources in human genetics and drug
+    discovery.  Listing a source here does not by itself mean a
+    provider queries it; the registry describes provenance for
+    evidence items that a provider supplies, and the gate counts
+    only items from registered sources.
     """
     return SourceRegistry(
         [
@@ -253,6 +253,17 @@ def default_source_registry() -> SourceRegistry:
                     "Curated protein sequence and functional annotation."
                 ),
                 base_url="https://www.uniprot.org/",
+            ),
+            Source(
+                source_id="chembl",
+                name="ChEMBL",
+                independence_group="ebi-chembl",
+                description=(
+                    "EMBL-EBI database of bioactive molecules, drug "
+                    "targets, mechanisms of action, and clinical "
+                    "development phases."
+                ),
+                base_url="https://www.ebi.ac.uk/chembl/",
             ),
             Source(
                 source_id="demo-bundled",

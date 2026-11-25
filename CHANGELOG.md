@@ -3,6 +3,17 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.6.0] - 2026-11-25
+
+Step 5: the Drug Discovery division, v1 (`provome/drug.py`).
+Target evidence under the same cite-or-decline gate: live ChEMBL
+targets/mechanisms (joined to genes via reviewed UniProt
+accessions), approved and phase 2-3 compounds, and title-matched
+Europe PMC literature. Every answer prints the computational-only
+boundary. Verified live: CFTR (ivacaftor, lumacaftor, tezacaftor)
+and BCL2 (venetoclax) ANSWER; unknown gene DECLINEs. ChEMBL added
+to the source registry. 4 new tests; suite 243.
+
 ## [0.5.0] - 2026-11-25
 
 The rename release: Omevra becomes **Provome** everywhere —
