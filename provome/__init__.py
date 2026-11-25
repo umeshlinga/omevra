@@ -34,6 +34,7 @@ Research software.  Not for clinical use.
 
 from . import (
     acmg,
+    agents,
     calibration,
     consequence,
     copilot,
