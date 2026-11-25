@@ -3,6 +3,27 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.14.0] - 2026-11-25
+
+Plant division v1 + the flagship's gnomAD fix (Step 3b).
+`provome/plant.py`: Plant provider (Ensembl Plants + species-
+restricted literature) mirroring Animal, division-scoped to
+Plant, agricultural RUO boundary; live-verified ANSWER on
+Arabidopsis FLC and an honest DECLINE on rice SD1 (no symbol
+record exists - the gate does not pad). Step 3b: the live Human
+provider now resolves ref/alt alleles through dbSNP (ClinVar
+xref -> NCBI refsnp GRCh38 SPDI -> left-normalisation against
+the reference), so the gnomAD item fires generally - live-
+verified CFTR p.Phe508del (AF 0.00788) and HBB p.Glu6Val
+(AF 0.01272); ambiguous multi-allelic cases still contribute
+nothing rather than guess. Also fixed: a nondeterministic
+ClinVar notation search, and per-source failure isolation in
+the live provider (one flaky API costs only its own items,
+never the whole answer - regression-tested). Plant and Animal
+remain in build and unbenchmarked; coverage is not claimed.
+Suite 319. (Released as 0.14.0: the 0.9.0-0.13.0 numbers were
+taken by the parallel voice-session release line.)
+
 ## [0.13.0] - 2026-11-25
 
 Gate benchmark, internal v1 (priority item #1 under the
@@ -68,26 +89,6 @@ hundred. Units are honest by construction: asked to run without a
 live dispatched assignment, a unit reports exactly that and
 produces no claims. Registration is the organisation standing up,
 not a claim of completed research. Suite 286.
-
-## [0.9.0] - 2026-11-25
-
-Plant division v1 + the flagship's gnomAD fix (Step 3b).
-`provome/plant.py`: Plant provider (Ensembl Plants + species-
-restricted literature) mirroring Animal, division-scoped to
-Plant, agricultural RUO boundary; live-verified ANSWER on
-Arabidopsis FLC and an honest DECLINE on rice SD1 (no symbol
-record exists - the gate does not pad). Step 3b: the live Human
-provider now resolves ref/alt alleles through dbSNP (ClinVar
-xref -> NCBI refsnp GRCh38 SPDI -> left-normalisation against
-the reference), so the gnomAD item fires generally - live-
-verified CFTR p.Phe508del (AF 0.00788) and HBB p.Glu6Val
-(AF 0.01272); ambiguous multi-allelic cases still contribute
-nothing rather than guess. Also fixed: a nondeterministic
-ClinVar notation search, and per-source failure isolation in
-the live provider (one flaky API costs only its own items,
-never the whole answer - regression-tested). Plant and Animal
-remain in build and unbenchmarked; coverage is not claimed.
-Suite 319.
 
 ## [0.8.0] - 2026-11-25
 
