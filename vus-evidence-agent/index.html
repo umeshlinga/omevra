@@ -200,13 +200,13 @@
   footer .name{font-size:21px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:0 0 8px}
   footer p{font-size:14.5px}
   footer .links{display:flex;gap:10px 24px;flex-wrap:wrap;margin-top:16px;font-size:14px}
-/* evidra-build:brand-css:start */
+/* provome-build:brand-css:start */
   .wordmark{display:inline-flex;align-items:center;gap:9px}
   .brand-mark{width:38px;height:38px;flex:none;display:block;background:#fff;border:1px solid var(--line,#e6e6e8);border-radius:9px}
   .hero-mark{display:block;width:132px;height:132px;margin:0 auto 26px;background:#fff;border:1px solid var(--line,#e6e6e8);border-radius:30px}
-/* evidra-build:brand-css:end */
+/* provome-build:brand-css:end */
 </style>
-<!-- evidra-build:head:start -->
+<!-- provome-build:head:start -->
 <meta name="description" content="Variant Evidence Agent by Provome: calibrated VUS reclassification — AUROC 0.970 measured on the 10,357 scored variants of a 27,748-variant temporal test (ECE 0.025) — with cited evidence or an explicit decline." />
 <link rel="canonical" href="https://provome.github.io/vus-evidence-agent/" />
 <meta property="og:type" content="website" />
@@ -215,14 +215,14 @@
 <meta property="og:description" content="Variant Evidence Agent by Provome: calibrated VUS reclassification — AUROC 0.970 measured on the 10,357 scored variants of a 27,748-variant temporal test (ECE 0.025) — with cited evidence or an explicit decline." />
 <meta property="og:url" content="https://provome.github.io/vus-evidence-agent/" />
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "ResearchApplication", "brand": {"@type": "Brand", "name": "Provome"}, "description": "Variant Evidence Agent by Provome: calibrated VUS reclassification — AUROC 0.970 measured on the 10,357 scored variants of a 27,748-variant temporal test (ECE 0.025) — with cited evidence or an explicit decline.", "name": "Variant Evidence Agent", "operatingSystem": "Web", "publisher": {"@type": "Organization", "name": "Provome"}, "url": "https://provome.github.io/vus-evidence-agent/"}</script>
-<!-- evidra-build:head:end -->
-<!-- evidra-build:brand-head:start -->
+<!-- provome-build:head:end -->
+<!-- provome-build:brand-head:start -->
 <link rel="icon" type="image/png" sizes="16x16" href="/provome/assets/brand/favicon-16.png" />
 <link rel="icon" type="image/png" sizes="32x32" href="/provome/assets/brand/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="48x48" href="/provome/assets/brand/favicon-48.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/provome/assets/brand/favicon-180.png" />
 <link rel="icon" type="image/png" sizes="512x512" href="/provome/assets/brand/favicon-512.png" />
-<!-- evidra-build:brand-head:end -->
+<!-- provome-build:brand-head:end -->
 </head>
 <body>
 
@@ -240,7 +240,7 @@
       <nav aria-label="Sections">
         <a href="#problem">Problem</a>
         <a href="#data">Data</a>
-        <a href="#temporal">Temporal split</a><!-- evidra-build:subnav -->
+        <a href="#temporal">Temporal split</a><!-- provome-build:subnav -->
         <a href="#method">Method</a>
         <a href="#results">Results</a>
         <a href="#calibration-drawn">Calibration, drawn</a>
@@ -332,7 +332,7 @@
   
   
   
-  <!-- TEMPORAL SPLIT, DRAWN (evidra-build:temporal) -->
+  <!-- TEMPORAL SPLIT, DRAWN (provome-build:temporal) -->
   <section id="temporal">
     <div class="sec-head"><h2>The temporal split, drawn</h2></div>
     <p>The split the whole evaluation rests on, as one picture. Classifications are frozen at the Jan 2024 cutoff; the test set is only what changed afterwards — variants whose labels did not exist when the model was trained:</p>
@@ -464,7 +464,7 @@
   
   
   
-  <!-- CALIBRATION, DRAWN (evidra-build:calibration-drawn) -->
+  <!-- CALIBRATION, DRAWN (provome-build:calibration-drawn) -->
   <section id="calibration-drawn">
     <div class="sec-head"><h2>Calibration, drawn from the prediction files</h2></div>
     <p>The calibration story above, as charts — computed from the stored per-variant predictions (<code>data/processed_v2/test_predictions*.csv</code> and, for the adopted final model, <code>headtohead_20261026_predictions.csv</code>), binned exactly as the project’s ECE is binned. Two reliability series are drawn from the files: the Platt failure and the final model. The raw ensemble’s per-variant predictions were never stored, so its ECE appears as a figure, not a curve — the same note the model analysis section keeps.</p>
@@ -642,7 +642,7 @@ PYTHONPATH=src python3 scripts/run_agent_real.py</pre></div>
     </div>
   </section>
 
-<!-- evidra-build:vus-demo:start -->
+<!-- provome-build:vus-demo:start -->
 
   <section id="demo">
     <div class="sec-head"><h2>Live demo</h2></div>
@@ -680,8 +680,8 @@ PYTHONPATH=src python3 scripts/run_agent_real.py</pre></div>
 
   </section>
 
-<!-- evidra-build:vus-demo:end -->
-<!-- evidra-build:vus-archlink:start -->
+<!-- provome-build:vus-demo:end -->
+<!-- provome-build:vus-archlink:start -->
 
   <section id="architecture">
     <div class="sec-head"><h2>Architecture</h2></div>
@@ -689,15 +689,15 @@ PYTHONPATH=src python3 scripts/run_agent_real.py</pre></div>
     <p><a href="/provome/vus-evidence-agent/architecture/">Variant Evidence Agent architecture ›</a></p>
   </section>
 
-<!-- evidra-build:vus-archlink:end -->
-<!-- evidra-build:vus-proof:start -->
+<!-- provome-build:vus-archlink:end -->
+<!-- provome-build:vus-proof:start -->
 
   <section id="proof">
     <div class="sec-head"><h2>Evaluations and API</h2></div>
     <p>The full proof record for this product: <a href="/provome/vus-evidence-agent/evaluations/">Evaluations</a> — the temporal-split protocol, versioned results v1 to v6, per-gene calibration worst first, the before/after decline record, and every result file as a download. The public API is documented at <a href="/provome/vus-evidence-agent/api/">API documentation</a>.</p>
   </section>
 
-<!-- evidra-build:vus-proof:end -->
+<!-- provome-build:vus-proof:end -->
   <footer>
     <p class="name">Provome</p>
     <p>Every number on this page is taken from the project’s README and its reports in <span class="mono">data/processed_v2/</span>, on the post-freeze temporal test set.</p>
@@ -929,7 +929,7 @@ PYTHONPATH=src python3 scripts/run_agent_real.py</pre></div>
   }
 })();
 </script>
-<!-- evidra-build:ask-widget:start -->
+<!-- provome-build:ask-widget:start -->
 
 <div class="ask-provome" id="ask-provome">
   <style>
@@ -957,6 +957,6 @@ PYTHONPATH=src python3 scripts/run_agent_real.py</pre></div>
 </div>
 <script src="/provome/assets/ask-provome.js" defer></script>
 
-<!-- evidra-build:ask-widget:end -->
+<!-- provome-build:ask-widget:end -->
 </body>
 </html>
