@@ -92,8 +92,8 @@ evidence gate with the failed stages named.
 Honest scale note: the worker registry and orchestration are
 designed to scale to thousands of registered specialist workers -
 workers are lightweight records plus a callable, held in a
-capability index, and a test registers 1,000 synthetic workers and
-verifies routing and assignment still work. The built-in offline
+capability index, and a stress test registers 10,000 synthetic
+workers and verifies routing and assignment still work. The built-in offline
 workers wrap the real engines in this package; live model-backed
 workers attach through the same worker protocol. This package does
 not claim thousands of workers are running today; it claims the
@@ -121,6 +121,16 @@ omevra/
                     interface only and off by default. Also carries
                     OrchestratedCopilot, the production surface that
                     runs a question through the whole organisation.
+    live.py         The live brain (v0.3.0): LiveEvidenceProvider
+                    fetches real records at question time from
+                    ClinVar, gnomAD (when coordinates are usable),
+                    and Europe PMC literature, with intent
+                    validation and fetch-dated citations.
+    converse.py     The human Copilot (v0.4.0): the Guide wraps
+                    gated answers in a conversational layer at
+                    simple / standard / expert depths, explains the
+                    tool itself, and shows the run's workings. It
+                    adds no claims beyond the gate.
     roles.py        The senior role registry: Chief Copilot,
                     division leads, and senior scientists,
                     researchers, data analysts, production engineers
@@ -230,11 +240,15 @@ other metrics are claimed for this package, and the demo data in
 - **Research software, not for clinical use.** Nothing in this
   package is a clinical classification, a diagnosis, or medical
   advice, for humans, animals, or plants.
-- **The demo provider is illustrative.** `OfflineDemoProvider` reads
+- **Two providers, honestly labelled.** `OfflineDemoProvider` reads
   a small bundled example set so the Copilot can be run and tested
-  offline. It is not live database access, and this package ships no
-  live access to ClinVar, gnomAD, OMIM, or any other database; the
-  source registry describes provenance, it does not fetch.
+  offline; its data is illustrative, not live database access.
+  `LiveEvidenceProvider` (`omevra/live.py`, v0.3.0) does fetch live:
+  ClinVar classifications and Europe PMC literature at question
+  time, and gnomAD frequencies when the ClinVar record supplies
+  usable coordinates (an allele-resolution source is still to come;
+  see the v0.3.0 changelog). OMIM is registered as a source but is
+  never fetched or bundled — it requires a licence.
 - **ACMG scoring is not ACMG judgement.** `omevra/acmg.py` scores
   criteria a curator supplies, under both published frameworks. It
   does not decide whether a criterion applies to a real variant, and

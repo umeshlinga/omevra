@@ -3,6 +3,21 @@
 All notable changes to Omevra are recorded here. Versions follow
 semantic versioning.
 
+## [0.4.1] - 2026-11-25
+
+Full audit of Steps 1-4 (three senior audit workers + CEO review).
+Fixes only; no new features.
+
+- `__init__.__version__` had remained "0.2.0" through three
+  releases; synced to the real version, with a new
+  version-consistency test so the drift fails loudly next time.
+- README "Honest limits" still claimed the package ships no live
+  database access - stale since v0.3.0. Rewritten to describe both
+  providers accurately; architecture list now includes live.py and
+  converse.py; worker-scale note corrected (10,000-worker stress
+  test, not 1,000).
+- Guide SIMPLE depth now prints the key source it refers to.
+
 ## [0.4.0] - 2026-11-25
 
 Step 4: the human Copilot (Items 21 + 23). `omevra.converse.Guide`

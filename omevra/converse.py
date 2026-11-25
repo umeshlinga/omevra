@@ -188,6 +188,8 @@ class Guide:
             )
             if answer.claims:
                 body += f"\n\nThe key record: {answer.claims[0].statement}"
+                if answer.claims[0].citations:
+                    body += f"\nKey source: {answer.claims[0].citations[0]}"
         else:
             opening = f"Here's what the evidence says about {topic}."
             lines = []
