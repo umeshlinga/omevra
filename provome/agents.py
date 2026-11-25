@@ -15,11 +15,18 @@ real work.  Three agents, each with one job, each measurable:
   its PMID is re-confirmed (record exists, title matches) through
   :mod:`provome.confirmation`, the same check the live providers
   are held to at fetch time.  Fabricated PMIDs come back FAILED,
-  unresolvable ones UNVERIFIED, and a FAILED item is never upgraded
+  unresolvable ones UNVERIFIED, retracted papers FAILED with an
+  integrity warning attached, and a FAILED item is never upgraded
   by a later pass — failure is sticky, exactly as in the gate's
-  deduplication.  Non-literature items pass through untouched:
-  their providers verify at fetch, and this agent's remit is the
-  literature, stated plainly rather than implied.
+  deduplication.  Since the strengthening pass (2026-11-25) it also
+  re-confirms ClinVar items against the served ClinVar record:
+  identity must match the item's topic, and the item's direction
+  is re-derived from the served classification, never taken from
+  the item's own claim — the fix for the fraud battery's two
+  KNOWN GAP misses.  Items from other sources, and ClinVar items
+  whose topic names no concrete variant (nothing to match a
+  record against), pass through untouched; that scope is stated
+  plainly rather than implied.
 * :class:`LiteratureAgent` — searches a local literature index
   (:mod:`provome.rag`) for a topic and bridges what it finds into
   evidence items, with the PubMed confirmer wired in.  The live
@@ -48,10 +55,16 @@ Standard library only.  Research software.  Not for clinical use.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Callable, Optional, Sequence
 
-from .confirmation import confirm_literature, make_pubmed_confirmer
+from .confirmation import (
+    clinvar_variation_id,
+    confirm_clinvar,
+    confirm_literature_detail,
+    make_pubmed_confirmer,
+    variant_short_from_topic,
+)
 from .copilot import EvidenceProvider
 from .evidence import EvidenceItem, VerificationStatus
 from .rag import RetrievalIndex, evidence_from_retrieval
@@ -64,10 +77,15 @@ __all__ = [
     "LiteratureAgent",
     "AgentBackedProvider",
     "LITERATURE_SOURCE_ID",
+    "CLINVAR_SOURCE_ID",
 ]
 
 #: The source id whose items the verification agent re-checks.
 LITERATURE_SOURCE_ID = "pubmed-literature"
+
+#: The source id whose items are re-confirmed against the served
+#: ClinVar record (identity match + direction from the record).
+CLINVAR_SOURCE_ID = "clinvar"
 
 _PMID_IN_CITATION_RE = re.compile(r"\bPMID[\s:#]*0*(\d{1,9})\b", re.IGNORECASE)
 _PMID_IN_URL_RE = re.compile(
@@ -184,15 +202,15 @@ def _claimed_title(item: EvidenceItem) -> Optional[str]:
 
 
 class VerificationAgent:
-    """Independently re-confirms literature items against PubMed.
+    """Independently re-confirms literature and ClinVar items.
 
     Args:
         transport: The injectable HTTP transport used for the
-            PubMed re-confirmation, called exactly as the live
-            providers call theirs.  Required: an agent that cannot
-            check must not pretend to, so there is no default that
-            silently skips the check.  (Tests inject fixtures; a
-            deployment injects the real transport.)
+            re-confirmations, called exactly as the live providers
+            call theirs.  Required: an agent that cannot check must
+            not pretend to, so there is no default that silently
+            skips the check.  (Tests inject fixtures; a deployment
+            injects the real transport.)
 
     Behaviour per literature item (``source_id ==
     "pubmed-literature"``):
@@ -200,13 +218,34 @@ class VerificationAgent:
     * FAILED stays FAILED.  Failure is sticky; this agent never
       resurrects an item a check already killed.
     * Otherwise the claimed PMID and title are extracted and
-      re-confirmed via :func:`provome.confirmation.confirm_literature`.
+      re-confirmed via
+      :func:`provome.confirmation.confirm_literature_detail`.
       The item leaves with the confirmation's status — VERIFIED
       only when PubMed holds the PMID and the titles match.
+    * A served record carrying a retraction notice fails the
+      item, and the integrity warning is attached to the item's
+      own notes so it travels with the item.  The flag records
+      the withdrawal; it accuses nobody.
     * An item with no recoverable PMID or title is demoted to
       UNVERIFIED: it cannot be re-confirmed, so it cannot count.
 
-    Non-literature items pass through unchanged.
+    Behaviour per ClinVar item (``source_id == "clinvar"``):
+
+    * FAILED stays FAILED, as above.
+    * When the item claims a Variation ID and its topic names a
+      concrete variant, the item is re-confirmed via
+      :func:`provome.confirmation.confirm_clinvar`: the served
+      record must exist and be about that variant, and the item
+      leaves with the served record's status and a direction
+      *derived from the served classification* — a Benign record
+      can no longer be dressed as pathogenic support by editing
+      the item.
+    * A ClinVar item with no recoverable Variation ID, or whose
+      topic names no concrete variant, cannot be identity-matched
+      and passes through unchanged; that scope limit is stated
+      here rather than implied.
+
+    Items from any other source pass through unchanged.
     """
 
     name = "verification-agent"
@@ -222,10 +261,13 @@ class VerificationAgent:
     def verify(
         self, items: Sequence[EvidenceItem]
     ) -> tuple[tuple[EvidenceItem, ...], AgentReport]:
-        """Re-confirm every literature item; return items + report."""
+        """Re-confirm literature and ClinVar items; return + report."""
         out: list[EvidenceItem] = []
         notes: list[str] = []
         for item in items:
+            if item.source_id == CLINVAR_SOURCE_ID:
+                out.append(self._verify_clinvar(item, notes))
+                continue
             if item.source_id != LITERATURE_SOURCE_ID:
                 out.append(item)
                 continue
@@ -247,23 +289,80 @@ class VerificationAgent:
                     )
                 out.append(item.with_status(VerificationStatus.UNVERIFIED))
                 continue
-            status, note = confirm_literature(self.transport, pmid, title)
+            status, note, retracted = confirm_literature_detail(
+                self.transport, pmid, title
+            )
             if status is not item.status:
                 notes.append(
                     f"{item.item_id}: {item.status.value} -> "
                     f"{status.value} on independent re-confirmation "
                     f"(PMID {pmid})"
                 )
-            out.append(
+            new_item = (
                 item.with_status(status)
                 if status is not item.status
                 else item
             )
+            if retracted:
+                notes.append(
+                    f"{item.item_id}: integrity warning attached "
+                    f"(PMID {pmid} is retracted)"
+                )
+                new_item = replace(
+                    new_item,
+                    notes=(
+                        f"{new_item.notes} {note}".strip()
+                        if new_item.notes
+                        else note
+                    ),
+                )
+            out.append(new_item)
         return tuple(out), AgentReport(
             agent=self.name,
             items_in=len(items),
             items_out=len(out),
             notes=tuple(notes),
+        )
+
+    def _verify_clinvar(
+        self, item: EvidenceItem, notes: list[str]
+    ) -> EvidenceItem:
+        """Re-confirm one ClinVar item against the served record."""
+        if item.is_failed:
+            notes.append(
+                f"{item.item_id}: already FAILED; failure is "
+                "sticky, not re-checked"
+            )
+            return item
+        variation_id = clinvar_variation_id(
+            item.citation, item.locator or ""
+        )
+        if variation_id is None or (
+            variant_short_from_topic(item.topic_key) is None
+        ):
+            # Nothing to identity-match against: outside the
+            # confirmer's remit, stated in the class docstring.
+            return item
+        status, direction, note = confirm_clinvar(
+            self.transport, variation_id, item.topic_key
+        )
+        new_direction = (
+            direction if direction is not None else item.direction
+        )
+        if status is item.status and new_direction is item.direction:
+            return item
+        notes.append(
+            f"{item.item_id}: ClinVar re-confirmation "
+            f"(Variation ID {variation_id}): status "
+            f"{item.status.value} -> {status.value}, direction "
+            f"{item.direction.value} -> {new_direction.value}; "
+            "direction derived from the served record"
+        )
+        return replace(
+            item,
+            status=status,
+            direction=new_direction,
+            notes=f"{item.notes} {note}".strip() if item.notes else note,
         )
 
 
