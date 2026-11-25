@@ -3,11 +3,12 @@
 The Founder's question (2026-11-25): can the agents detect fraud —
 duplicates and fake things?  This battery is the permanent,
 executable answer.  Each fraud type is seeded deliberately and the
-expected detection is asserted.  Two types are only partially
-detected today; those cases are marked KNOWN GAP in their names and
-docstrings, assert the current behaviour so the gap is pinned and
-visible, and must be flipped the day a fix lands — a gap that fails
-silently is worse than a gap that is named.
+expected detection is asserted.  Two types were only partially
+detected when the battery was written; those cases were marked
+KNOWN GAP, asserting the gapped behaviour so the gap stayed pinned
+and visible.  The ClinVar confirmer landed the same day
+(strengthening pass), and both tests were flipped to assert the
+fixed behaviour — the flip is the proof the fix is real.
 
 Fraud types:
     1. fabricated PMIDs
@@ -52,6 +53,32 @@ def pubmed_transport(url, body=None):
     if title is None:
         return {"result": {"uids": []}}
     return {"result": {"uids": [pmid], pmid: {"title": title}}}
+
+
+# The ClinVar fixture world for the confirmer: Variation ID 424242
+# is a genuine CFTR Phe508del record whose served classification is
+# Benign — the record the dressed-up fraud of type 6 hides behind.
+_CLINVAR_RECORDS = {
+    "424242": {
+        "title": "NM_000492.4(CFTR):c.1521_1523delCTT (p.Phe508del)",
+        "protein_change": "F508del",
+        "germline_classification": {
+            "description": "Benign",
+            "review_status": "criteria provided, single submitter",
+        },
+    },
+}
+
+
+def clinvar_transport(url, body=None):
+    """Combined fixture: ClinVar esummary + the PubMed fixture."""
+    if "db=clinvar" in url:
+        uid = url.rsplit("id=", 1)[1].split("&")[0]
+        record = _CLINVAR_RECORDS.get(uid)
+        if record is None:
+            return {"result": {"uids": []}}
+        return {"result": {"uids": [uid], uid: record}}
+    return pubmed_transport(url, body)
 
 
 def item(item_id, source, citation, direction=D.SUPPORTS, status=S.VERIFIED,
@@ -176,18 +203,19 @@ def test_fraud_document_without_pmid_is_excluded():
     assert items == []
 
 
-def test_known_gap_item_level_source_spoof_is_not_detected():
-    """KNOWN GAP: an EvidenceItem that simply *declares* a registered
-    non-literature source (here a fabricated ClinVar citation) is
-    trusted by the gate and untouched by the VerificationAgent,
-    whose remit is literature only.  Detection today relies on
-    providers being honest; a ClinVar confirmer does not exist.
-    This test pins the gap: when one lands, flip this test."""
+def test_fraud_item_level_source_spoof_is_caught_by_clinvar_confirmer():
+    """Was KNOWN GAP, flipped 2026-11-25: an EvidenceItem that
+    simply *declares* a registered non-literature source (here a
+    fabricated ClinVar citation) was trusted by the gate and
+    untouched by the VerificationAgent.  The ClinVar confirmer now
+    resolves the claimed Variation ID against the served ClinVar
+    record: 987654321 does not exist there, so the item comes back
+    FAILED and cannot carry a gate pass."""
     spoof = item("spoof", "clinvar", "ClinVar Variation ID 987654321")
-    out, _ = VerificationAgent(pubmed_transport).verify([spoof])
-    assert out[0].status is S.VERIFIED  # untouched: the gap
-    gate = evaluate_gate([spoof] + genuine_trio()[1:], T)
-    assert gate.passed  # counted: the gap
+    out, _ = VerificationAgent(clinvar_transport).verify([spoof])
+    assert out[0].status is S.FAILED
+    gate = evaluate_gate(list(out) + genuine_trio()[1:], T)
+    assert not gate.passed  # only the 2 genuine items remain
 
 
 # ---------------------------------------------------------------------
@@ -258,21 +286,26 @@ def test_fraud_single_disguised_refuter_is_disclosed_not_hidden():
 # ---------------------------------------------------------------------
 
 
-def test_known_gap_dressed_benign_item_is_counted_by_the_gate():
-    """KNOWN GAP: a raw item claiming a ClinVar citation, stamped
-    VERIFIED, with direction SUPPORTS and pathogenic prose, is
-    counted by the gate even if the underlying record is Benign —
-    the gate reads the direction field, not the record.  The
-    mitigation is architectural (next test): the real live provider
-    derives direction from the classification string, so it cannot
-    produce this item.  A provider that lies at the item level is
-    not detected today."""
+def test_fraud_dressed_benign_item_is_refuted_by_clinvar_confirmer():
+    """Was KNOWN GAP, flipped 2026-11-25: a raw item claiming a
+    ClinVar citation, stamped VERIFIED, with direction SUPPORTS
+    and pathogenic prose, was counted by the gate even though the
+    underlying record is Benign — the gate reads the direction
+    field, not the record.  The ClinVar confirmer now re-derives
+    the direction from the served record: the record behind
+    Variation ID 424242 is genuine but Benign, so the item comes
+    back VERIFIED with direction REFUTES, is disclosed as
+    refuting, and no longer counts as support."""
     dressed = item(
         "dressed", "clinvar", "ClinVar Variation ID 424242",
         statement="ClinVar classifies this variant as pathogenic.",
     )
-    gate = evaluate_gate([dressed] + genuine_trio()[1:], T)
-    assert gate.passed  # the dressed item counted: the gap
+    out, _ = VerificationAgent(clinvar_transport).verify([dressed])
+    assert out[0].status is S.VERIFIED  # the record itself is real
+    assert out[0].direction is D.REFUTES  # ...but it refutes
+    gate = evaluate_gate(list(out) + genuine_trio()[1:], T)
+    assert not gate.passed  # only the 2 genuine supports remain
+    assert gate.verified_refuting == tuple(out)  # disclosed
 
 
 def test_mitigation_live_provider_derives_direction_from_record():
