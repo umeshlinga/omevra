@@ -3,6 +3,19 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.13.0] - 2026-11-25
+
+Gate benchmark, internal v1 (priority item #1 under the
+Founder's one-by-one order): `provome/benchmark.py` measures the
+cite-or-decline gate's behaviour on 10 fixed probes - must-answer,
+must-decline (too few verified, one source group, unverified
+only, wrong topic, refuting only, empty), and must-disclose
+(passes but surfaces verified refutation instead of hiding it).
+Result at ship: 10/10 correct, zero disclosure failures. Fixture
+probes test gate behaviour, not biomedical facts; the public
+benchmark replays this harness on public data after Quality
+Division and Founder sign-off. Suite 295.
+
 ## [0.12.1] - 2026-11-25
 
 Fix: the Quality Division honesty test constructed WorkTask
