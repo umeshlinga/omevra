@@ -3,6 +3,15 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.11.0] - 2026-11-25
+
+Diabetes stands as its own corps at 20,000 researchers
+(Founder's order). It began as focus areas inside the Metabolic
+corps; it now has its own registry, focuses (type 1, type 2,
+gestational, insulin resistance, complications, prevention,
+paediatric, monitoring technology) and 200 senior leads.
+Disease corps total: 70,000 across 11 corps. Suite 289.
+
 ## [0.10.0] - 2026-11-25
 
 Disease corps (Founder's direction): `provome/diseases.py` gives

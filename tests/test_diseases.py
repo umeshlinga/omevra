@@ -19,8 +19,14 @@ def test_corps_assignments_unique_and_led():
 
 
 def test_first_wave_manifest_arithmetic():
-    assert len(FIRST_WAVE) == 10
-    assert len(FIRST_WAVE) * 5000 == 50000
+    from provome.diseases import CORPS_SIZE, CORPS_SIZES
+
+    assert len(FIRST_WAVE) == 11
+    total = sum(
+        CORPS_SIZES.get(name, CORPS_SIZE) for name, _ in FIRST_WAVE
+    )
+    assert total == 70000
+    assert CORPS_SIZES["diabetes"] == 20000
     divisions = {d for _, d in FIRST_WAVE}
     assert divisions == {"human", "animal", "plant"}
 

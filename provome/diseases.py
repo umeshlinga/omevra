@@ -40,7 +40,10 @@ __all__ = [
 CORPS_SIZE = 5000
 
 # The first wave of disease corps: (corps name, division).
-# Ten corps x 5,000 = 50,000 disease researchers.
+# Ten corps x 5,000 = 50,000 disease researchers, plus Diabetes
+# below. Diabetes began as focus areas inside Metabolic; on
+# 2026-11-25 the Founder ordered it to stand as its own corps,
+# enlarged to 20,000 (CORPS_SIZES) given the scale of the disease.
 FIRST_WAVE: tuple = (
     ("oncology", "human"),
     ("cardiovascular", "human"),
@@ -48,11 +51,15 @@ FIRST_WAVE: tuple = (
     ("neurological", "human"),
     ("rare-diseases", "human"),
     ("metabolic", "human"),
+    ("diabetes", "human"),
     ("animal-infectious", "animal"),
     ("animal-genetic", "animal"),
     ("plant-pathology", "plant"),
     ("crop-resistance", "plant"),
 )
+
+# Per-corps size overrides (Founder's orders); default CORPS_SIZE.
+CORPS_SIZES: dict = {"diabetes": 20000}
 
 # Focus areas per corps: the distinct subjects its researchers own.
 _FOCUS: dict = {
@@ -80,9 +87,14 @@ _FOCUS: dict = {
         "rare-evidence-assembly",
     ),
     "metabolic": (
-        "type2-diabetes", "type1-diabetes", "obesity", "thyroid",
-        "lipid-metabolic", "liver-metabolic", "rare-metabolic",
-        "metabolic-syndrome",
+        "obesity", "thyroid", "lipid-metabolic", "liver-metabolic",
+        "rare-metabolic", "metabolic-syndrome", "hormonal",
+        "bone-metabolic",
+    ),
+    "diabetes": (
+        "type1", "type2", "gestational", "insulin-resistance",
+        "complications", "prevention", "paediatric-diabetes",
+        "monitoring-technology",
     ),
     "animal-infectious": (
         "canine-infectious", "feline-infectious", "cattle-infectious",
@@ -170,7 +182,9 @@ def build_disease_corps(
 def deploy_first_wave() -> dict:
     """Build every corps in the first wave; returns name -> corps."""
     return {
-        name: build_disease_corps(name, division)
+        name: build_disease_corps(
+            name, division, size=CORPS_SIZES.get(name, CORPS_SIZE)
+        )
         for name, division in FIRST_WAVE
     }
 
@@ -180,7 +194,9 @@ def _demo() -> None:
     print("=" * 72)
     total = 0
     for name, division in FIRST_WAVE:
-        corps = build_disease_corps(name, division)
+        corps = build_disease_corps(
+            name, division, size=CORPS_SIZES.get(name, CORPS_SIZE)
+        )
         total += len(corps)
         print(f"  {name:<22} ({division:<6}) {len(corps):>6} researchers")
     print(f"  {'TOTAL':<22}          {total:>6} researchers")
