@@ -8,8 +8,8 @@ from datetime import date
 
 import pytest
 
-from omevra.copilot import Copilot, Verdict
-from omevra.live import (
+from provome.copilot import Copilot, Verdict
+from provome.live import (
     LiveEvidenceProvider,
     acceptable_notations,
     one_letter_notation,

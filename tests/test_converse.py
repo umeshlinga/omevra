@@ -2,9 +2,9 @@
 
 import pytest
 
-from omevra.converse import Depth, Guide, tool_question_key
-from omevra.copilot import Copilot
-from omevra.live import LiveEvidenceProvider
+from provome.converse import Depth, Guide, tool_question_key
+from provome.copilot import Copilot
+from provome.live import LiveEvidenceProvider
 
 
 def test_tool_questions_route_to_facts():

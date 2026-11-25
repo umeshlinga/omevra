@@ -6,15 +6,15 @@ Worker A (adversarial gate tests, 61 cases), Worker B (fuzz,
 """
 import pytest
 
-from omevra.calibration import auroc, calibration_table, log_loss
-from omevra.consequence import translate_codon
-from omevra.copilot import Claim, Copilot, CopilotQuestion, Verdict
-from omevra.domains import Division
-from omevra.evidence import (
+from provome.calibration import auroc, calibration_table, log_loss
+from provome.consequence import translate_codon
+from provome.copilot import Claim, Copilot, CopilotQuestion, Verdict
+from provome.domains import Division
+from provome.evidence import (
     EvidenceItem, VerificationStatus, SupportDirection, evaluate_gate,
 )
-from omevra.population import DiseaseModel, Inheritance, max_credible_allele_count
-from omevra.variant import (
+from provome.population import DiseaseModel, Inheritance, max_credible_allele_count
+from provome.variant import (
     VariantParseError, VcfRecord, parse_coding_hgvs, parse_protein_hgvs,
     parse_vcf_line, validate_dna_sequence,
 )

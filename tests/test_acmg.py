@@ -1,8 +1,8 @@
-"""Tests for omevra.acmg: Tavtigian points and Richards rules."""
+"""Tests for provome.acmg: Tavtigian points and Richards rules."""
 
 import pytest
 
-from omevra.acmg import (
+from provome.acmg import (
     Classification,
     Criterion,
     CriterionAssessment,
@@ -13,7 +13,7 @@ from omevra.acmg import (
     points_for,
     total_points,
 )
-from omevra.acmg import Direction
+from provome.acmg import Direction
 
 
 def assess(*codes):

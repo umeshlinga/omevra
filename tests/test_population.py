@@ -1,10 +1,10 @@
-"""Tests for omevra.population: Whiffin maximum credible AF."""
+"""Tests for provome.population: Whiffin maximum credible AF."""
 
 import math
 
 import pytest
 
-from omevra.population import (
+from provome.population import (
     DiseaseModel,
     Inheritance,
     credible_interval_excludes,

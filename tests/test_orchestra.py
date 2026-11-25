@@ -1,4 +1,4 @@
-"""Tests for omevra.orchestra: one Copilot, an organisation inside.
+"""Tests for provome.orchestra: one Copilot, an organisation inside.
 
 Covers the end-to-end orchestrated ask, the six QC stages and their
 failure paths, cross-worker disagreement and escalation, exclusion
@@ -10,14 +10,14 @@ from dataclasses import dataclass
 
 import pytest
 
-from omevra.copilot import OrchestratedCopilot, Verdict
-from omevra.evidence import (
+from provome.copilot import OrchestratedCopilot, Verdict
+from provome.evidence import (
     EvidenceItem,
     SupportDirection,
     VerificationStatus,
     default_source_registry,
 )
-from omevra.orchestra import (
+from provome.orchestra import (
     ClaimDraft,
     Orchestra,
     QCInput,
@@ -25,7 +25,7 @@ from omevra.orchestra import (
     default_worker_registry,
     run_qc_pipeline,
 )
-from omevra.teams import TEAM_RARE_DISEASE
+from provome.teams import TEAM_RARE_DISEASE
 
 CFTR_Q = "What is CFTR p.Phe508del and does it cause cystic fibrosis?"
 BRCA1_Q = "What can you tell me about the BRCA1 c.68_69delAG founder variant?"
@@ -285,7 +285,7 @@ class StubWorker:
     capabilities: tuple = ("evidence",)
 
     def run(self, task, context):
-        from omevra.orchestra import WorkResult
+        from provome.orchestra import WorkResult
 
         if self.raises:
             raise RuntimeError("stub worker exploded")
@@ -378,7 +378,7 @@ def test_reported_failure_worker_is_excluded_and_tiebreak_covers():
         capabilities: tuple = ("evidence",)
 
         def run(self, task, context):
-            from omevra.orchestra import WorkResult
+            from provome.orchestra import WorkResult
 
             return WorkResult(
                 task_id=task.task_id,
@@ -451,7 +451,7 @@ class SyntheticWorker:
     capabilities: tuple = ("synthetic",)
 
     def run(self, task, context):
-        from omevra.orchestra import WorkResult
+        from provome.orchestra import WorkResult
 
         return WorkResult(
             task_id=task.task_id,

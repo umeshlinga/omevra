@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "omevra"
-version = "0.4.1"
-description = "Omevra: an evidence engine for biology across Human, Animal, and Plant divisions, with the Omevra Copilot and a cite-or-decline evidence gate."
+name = "provome"
+version = "0.5.0"
+description = "Provome: an evidence engine for biology across Human, Animal, and Plant divisions, with the Provome Copilot and a cite-or-decline evidence gate."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Proprietary - research software, all rights reserved" }
@@ -33,13 +33,13 @@ dependencies = []
 test = ["pytest>=7"]
 
 [project.scripts]
-omevra-copilot = "omevra.copilot:main"
+provome-copilot = "provome.copilot:main"
 
 [tool.setuptools]
-packages = ["omevra"]
+packages = ["provome"]
 
 [tool.setuptools.package-data]
-omevra = ["data/*.json"]
+provome = ["data/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,15 +1,15 @@
-"""Tests for omevra.copilot: answer, decline, gate sensitivity, LLM guard."""
+"""Tests for provome.copilot: answer, decline, gate sensitivity, LLM guard."""
 
 import pytest
 
-from omevra.copilot import (
+from provome.copilot import (
     Copilot,
     CopilotQuestion,
     DisabledLLMHook,
     OfflineDemoProvider,
     Verdict,
 )
-from omevra.evidence import (
+from provome.evidence import (
     EvidenceItem,
     EvidenceKind,
     VerificationStatus,

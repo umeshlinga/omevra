@@ -1,4 +1,4 @@
-"""Tests for omevra.consequence on a small hand-built CDS.
+"""Tests for provome.consequence on a small hand-built CDS.
 
 CDS used throughout (15 bases, protein M A Y G then stop):
     ATG GCT TAT GGT TAA
@@ -8,7 +8,7 @@ codon5 (stop) 13-15.
 
 import pytest
 
-from omevra.consequence import (
+from provome.consequence import (
     CODON_TABLE,
     ConsequenceTerm,
     apply_coding_variant,
@@ -18,7 +18,7 @@ from omevra.consequence import (
     translate,
     translate_codon,
 )
-from omevra.variant import VariantParseError, parse_coding_hgvs
+from provome.variant import VariantParseError, parse_coding_hgvs
 
 CDS = "ATGGCTTATGGTTAA"
 

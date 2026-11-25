@@ -3,9 +3,9 @@
 import json
 from pathlib import Path
 
-from omevra.variant import parse_coding_hgvs, parse_protein_hgvs
+from provome.variant import parse_coding_hgvs, parse_protein_hgvs
 
-DATA = Path(__file__).parent.parent / "omevra" / "data"
+DATA = Path(__file__).parent.parent / "provome" / "data"
 
 
 def _examples():

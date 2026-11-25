@@ -323,7 +323,7 @@ class CodingVariant:
     ATG translation initiation codon, as in HGVS.  Intronic offsets
     (for example ``c.76+2T>C``) are represented with ``offset`` and
     ``intronic_side``; this package parses them but the consequence
-    engine in :mod:`omevra.consequence` handles them as splice-region
+    engine in :mod:`provome.consequence` handles them as splice-region
     candidates rather than editing the coding sequence.
 
     Attributes:

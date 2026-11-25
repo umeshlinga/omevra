@@ -1,4 +1,4 @@
-# The Omevra Mission
+# The Provome Mission
 
 ## Why we exist
 
@@ -8,11 +8,11 @@ with no verified answer inside: variants nobody can interpret,
 diseases nobody can name, targets nobody has proven. People wait
 years inside that gap.
 
-Omevra exists to close it.
+Provome exists to close it.
 
 ## What we do
 
-Omevra is an evidence company. For any biological problem, in any
+Provome is an evidence company. For any biological problem, in any
 species, our Copilot returns one of two things: an answer backed by
 verified evidence, with a source a human can check for every claim,
 or an honest decline that names exactly what evidence is missing.
@@ -56,4 +56,4 @@ We are not the pill. We are the reason the right pill, the right
 diagnosis and the right decision can exist: the evidence,
 verified.
 
-- Omevra. Evidence, or an honest decline.
+- Provome. Evidence, or an honest decline.

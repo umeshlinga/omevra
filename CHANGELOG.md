@@ -1,7 +1,20 @@
 # Changelog
 
-All notable changes to Omevra are recorded here. Versions follow
+All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
+
+## [0.5.0] - 2026-11-25
+
+The rename release: Omevra becomes **Provome** everywhere —
+package (`provome`), repository, documentation, and website —
+executing the Founder's 2026-11-25 decision (name-risk finding:
+Omivera biotech + OMEVRA-DM pharma brand; see the roadmap's
+NAME_OPTIONS_v1.md). All 239 tests pass under the new name.
+
+### Added
+- The Provome website (this repo's index.html): how it works, a
+  real live-run proof section, honestly-labelled divisions, the
+  freemium pricing shape, Research Use Only footer.
 
 ## [0.4.1] - 2026-11-25
 
@@ -20,7 +33,7 @@ Fixes only; no new features.
 
 ## [0.4.0] - 2026-11-25
 
-Step 4: the human Copilot (Items 21 + 23). `omevra.converse.Guide`
+Step 4: the human Copilot (Items 21 + 23). `provome.converse.Guide`
 wraps the gated Copilot in a conversational layer at three depths
 (simple / standard / expert). It adds no claims: every factual
 sentence comes from a finished gated answer; declines stay declines
@@ -34,7 +47,7 @@ confidence-is-a-heuristic note) and limits. 7 new tests; suite 237.
 ## [0.3.0] - 2026-11-25
 
 Step 3: the live brain. The Copilot gains its own browser
-(`omevra.live.LiveEvidenceProvider`, Item 22): at question time it
+(`provome.live.LiveEvidenceProvider`, Item 22): at question time it
 fetches real records from ClinVar (NCBI E-utilities), gnomAD (Broad
 GraphQL, when the ClinVar record supplies usable coordinates), and
 Europe PMC literature, and answers only from what actually came
@@ -104,14 +117,14 @@ semantic versioning.
 
 ### Added
 - One Copilot, an organisation inside: senior role registry
-  (omevra/roles.py) where every role is senior by construction, from
+  (provome/roles.py) where every role is senior by construction, from
   Chief Copilot to division leads and senior specialists.
-- Team registry (omevra/teams.py): 14 teams including Cancer, Tumor
+- Team registry (provome/teams.py): 14 teams including Cancer, Tumor
   Biology, Rare Disease, DNA and Variant, Animal Health, Livestock,
   Plant Crops and Plant Pathology, each with a senior lead and
   declared problem areas, plus a router with a named fallback team
   per division.
-- Orchestration engine (omevra/orchestra.py): the Chief Copilot
+- Orchestration engine (provome/orchestra.py): the Chief Copilot
   routes each question to a team, assigns primary and cross-check
   workers, requires agreement from at least 2 independent workers
   per key claim, escalates disagreements to the team lead with a
@@ -130,13 +143,13 @@ semantic versioning.
 ## [0.1.0] - 2026-11-24
 
 ### Added
-- Omevra Copilot core with the cite-or-decline evidence gate: an
+- Provome Copilot core with the cite-or-decline evidence gate: an
   answer requires at least 3 verified evidence items from at least 2
   independent source groups, otherwise the Copilot declines with
   named reasons.
 - Evidence engine: EvidenceItem model, source registry with
   independence groups, fingerprint deduplication, gate evaluation.
-- Three divisions on one engine (omevra/domains.py): Human (live,
+- Three divisions on one engine (provome/domains.py): Human (live,
   benchmarked), Animal and Plant (expansion). ACMG marked
   human-clinical only and refused for Animal and Plant questions.
 - ACMG/AMP classification: Richards 2015 combining rules and the

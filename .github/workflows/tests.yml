@@ -24,4 +24,4 @@ jobs:
       - name: Run test suite
         run: python -m pytest tests/ -q
       - name: Run Copilot demo smoke test
-        run: python -m omevra.copilot
+        run: python -m provome.copilot

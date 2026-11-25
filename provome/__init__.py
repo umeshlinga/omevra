@@ -1,4 +1,4 @@
-"""Omevra: an evidence engine for biology, in three divisions.
+"""Provome: an evidence engine for biology, in three divisions.
 
 One engine - sequence consequence, population frequency mathematics,
 calibration, phenotype similarity, and a cite-or-decline evidence
@@ -8,7 +8,7 @@ expansion divisions on the same engine.
 
 Modules:
     evidence:    evidence items, sources, and the cite-or-decline gate.
-    copilot:     the Omevra Copilot, the single question-answering
+    copilot:     the Provome Copilot, the single question-answering
                  surface of the engine.
     roles:       the senior role registry of the Copilot
                  organisation (Chief Copilot, division leads, senior
@@ -50,13 +50,13 @@ from .copilot import (
     Copilot,
     CopilotAnswer,
     CopilotQuestion,
-    OmevraCopilot,
+    ProvomeCopilot,
     OrchestratedCopilot,
 )
 from .domains import Division, get_division
 from .evidence import EvidenceItem, evaluate_gate
 
-__version__ = "0.4.1"
+__version__ = "0.5.0"
 
 __all__ = [
     "acmg",
@@ -72,7 +72,7 @@ __all__ = [
     "teams",
     "variant",
     "Copilot",
-    "OmevraCopilot",
+    "ProvomeCopilot",
     "OrchestratedCopilot",
     "CopilotAnswer",
     "CopilotQuestion",

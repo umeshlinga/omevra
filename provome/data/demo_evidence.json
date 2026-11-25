@@ -1,5 +1,5 @@
 {
-  "label": "Offline demonstration evidence bundled with Omevra. Illustrative items written for the demo provider, pointing at real, well-known resources a reader can check. This is not live database access and these items are not a clinical classification.",
+  "label": "Offline demonstration evidence bundled with Provome. Illustrative items written for the demo provider, pointing at real, well-known resources a reader can check. This is not live database access and these items are not a clinical classification.",
   "topics": {
     "brca1:c.68_69delag": {
       "aliases": [
@@ -72,11 +72,11 @@
           "status": "verified"
         },
         {
-          "citation": "Omevra bundled illustrative examples, CFTR entry",
+          "citation": "Provome bundled illustrative examples, CFTR entry",
           "direction": "supports",
           "item_id": "demo-cftr-4",
           "kind": "other",
-          "locator": "omevra/data/examples.json",
+          "locator": "provome/data/examples.json",
           "source_id": "demo-bundled",
           "statement": "The deletion c.1521_1523delCTT removes three bases and therefore deletes one residue without shifting the reading frame, an in-frame deletion.",
           "status": "verified"
@@ -113,11 +113,11 @@
           "status": "verified"
         },
         {
-          "citation": "Omevra bundled illustrative examples, HBB entry",
+          "citation": "Provome bundled illustrative examples, HBB entry",
           "direction": "supports",
           "item_id": "demo-hbb-3",
           "kind": "other",
-          "locator": "omevra/data/examples.json",
+          "locator": "provome/data/examples.json",
           "source_id": "demo-bundled-2",
           "statement": "The sickle variant is a single nucleotide substitution, c.20A>T in HBB, and is one of the textbook examples of a pathogenic missense variant.",
           "status": "verified"

@@ -1,6 +1,6 @@
-# Omevra
+# Provome
 
-An evidence engine for biology, and the **Omevra Copilot**: one copilot
+An evidence engine for biology, and the **Provome Copilot**: one copilot
 that answers questions about variants, genes, and diseases only when
 the evidence behind an answer is strong enough to cite - and declines,
 with reasons, when it is not.
@@ -9,7 +9,7 @@ Research software. Not for clinical use.
 
 ## Three divisions, one engine
 
-Omevra is not human-only and not cancer-only. The same engine serves
+Provome is not human-only and not cancer-only. The same engine serves
 three divisions:
 
 - **Human** - all human disease: rare disease, cancer, cardiac,
@@ -23,7 +23,7 @@ three divisions:
 One engine, honestly shared: molecular consequence prediction,
 population frequency mathematics, calibration metrics, phenotype
 semantic similarity, and the cite-or-decline evidence gate are
-species-agnostic, and the division registry in `omevra/domains.py`
+species-agnostic, and the division registry in `provome/domains.py`
 says exactly that, in data. It also says what does not transfer:
 ACMG/AMP classification is human-clinical specific and is never
 applied to animal or plant questions.
@@ -36,8 +36,8 @@ engine. This package does not claim benchmarked coverage for them.
 
 There is exactly one Copilot on the outside. Inside it, from v0.2,
 sits a whole organisation, arranged like a company and run like a
-production system (`omevra/roles.py`, `omevra/teams.py`,
-`omevra/orchestra.py`):
+production system (`provome/roles.py`, `provome/teams.py`,
+`provome/orchestra.py`):
 
 - **Hierarchy.** A Chief Copilot orchestrates everything. Below it,
   division leads (Human, Animal, Plant) lead senior teams: separate
@@ -81,7 +81,7 @@ production system (`omevra/roles.py`, `omevra/teams.py`,
 Run the organisation demo (offline):
 
 ```bash
-python -m omevra.orchestra
+python -m provome.orchestra
 ```
 
 It routes the CFTR question to the Rare Disease Team, assigns
@@ -114,8 +114,8 @@ be built.
 ## Architecture
 
 ```
-omevra/
-    copilot.py      The Omevra Copilot: question in, gated answer or
+provome/
+    copilot.py      The Provome Copilot: question in, gated answer or
                     structured decline out. Pluggable evidence
                     providers; optional LLM rephrasing hook is an
                     interface only and off by default. Also carries
@@ -183,7 +183,7 @@ pin, or audit.
 Run the Copilot demo (offline, no network, bundled example data):
 
 ```bash
-python -m omevra.copilot
+python -m provome.copilot
 ```
 
 It prints one ANSWER case (CFTR p.Phe508del) and one DECLINE case
@@ -193,7 +193,7 @@ below the gate), and shows division context being carried through.
 Use it as a library:
 
 ```python
-from omevra import Copilot, CopilotQuestion
+from provome import Copilot, CopilotQuestion
 
 copilot = Copilot()
 answer = copilot.ask("What is CFTR p.Phe508del and does it cause cystic fibrosis?")
@@ -202,7 +202,7 @@ for claim in answer.claims:
     print(claim.statement, claim.citations)
 
 # Division context (defaults to Human):
-from omevra.domains import Division
+from provome.domains import Division
 q = CopilotQuestion(text="...", division=Division.PLANT)
 q2 = CopilotQuestion(text="...", species="Bos taurus")  # Animal, by species
 ```
@@ -211,7 +211,7 @@ Or install the console entry point:
 
 ```bash
 pip install .
-omevra-copilot
+provome-copilot
 ```
 
 ## Running the tests
@@ -230,10 +230,10 @@ evidence, declining below the gate, and carrying division context.
 
 ## Benchmark numbers
 
-The only platform numbers stated for Omevra are for the variant
+The only platform numbers stated for Provome are for the variant
 evidence agent benchmark: **AUROC 0.9705** and **ECE 0.0248**. No
 other metrics are claimed for this package, and the demo data in
-`omevra/data/` is illustrative example data, not benchmark data.
+`provome/data/` is illustrative example data, not benchmark data.
 
 ## Honest limits
 
@@ -243,13 +243,13 @@ other metrics are claimed for this package, and the demo data in
 - **Two providers, honestly labelled.** `OfflineDemoProvider` reads
   a small bundled example set so the Copilot can be run and tested
   offline; its data is illustrative, not live database access.
-  `LiveEvidenceProvider` (`omevra/live.py`, v0.3.0) does fetch live:
+  `LiveEvidenceProvider` (`provome/live.py`, v0.3.0) does fetch live:
   ClinVar classifications and Europe PMC literature at question
   time, and gnomAD frequencies when the ClinVar record supplies
   usable coordinates (an allele-resolution source is still to come;
   see the v0.3.0 changelog). OMIM is registered as a source but is
   never fetched or bundled — it requires a licence.
-- **ACMG scoring is not ACMG judgement.** `omevra/acmg.py` scores
+- **ACMG scoring is not ACMG judgement.** `provome/acmg.py` scores
   criteria a curator supplies, under both published frameworks. It
   does not decide whether a criterion applies to a real variant, and
   real classifications require current ClinGen specifications and

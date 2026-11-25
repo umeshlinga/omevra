@@ -1,11 +1,11 @@
-"""Senior role registry: the people layer of the Omevra organisation.
+"""Senior role registry: the people layer of the Provome organisation.
 
-The Omevra Copilot is one copilot on the outside.  Inside, it is an
+The Provome Copilot is one copilot on the outside.  Inside, it is an
 organisation, and an organisation is made of roles before it is made
 of code.  This module is the registry of those roles.
 
 Every role in this registry is **senior level by design**.  There are
-no junior, intern, or unsupervised roles anywhere in the Omevra
+no junior, intern, or unsupervised roles anywhere in the Provome
 Copilot organisation: the work this system does - weighing evidence
 about variants, genes, and diseases - is work where an unsupervised
 junior mistake becomes a wrong answer given to a scientist, so the
@@ -20,7 +20,7 @@ to Chief:
 * ``LEAD`` - a senior who also leads a team or a division: signs off
   team output, orders re-runs, resolves disagreements escalated by
   the team.  A lead's sign-off is a QC stage in
-  :mod:`omevra.orchestra`, not a courtesy.
+  :mod:`provome.orchestra`, not a courtesy.
 * ``PRINCIPAL`` - a senior with organisation-wide scope: production
   standards, evidence standards, QC standards.  Principals set the
   rules the gates enforce.
@@ -31,9 +31,9 @@ to Chief:
 
 Roles are data, not classes: a :class:`Role` is a typed record with
 an id, a title, a seniority level, a tuple of responsibilities, and
-a team scope.  Teams (:mod:`omevra.teams`) are built by naming the
+a team scope.  Teams (:mod:`provome.teams`) are built by naming the
 role that leads them and the roles that staff them, and the
-orchestration engine (:mod:`omevra.orchestra`) assigns work to
+orchestration engine (:mod:`provome.orchestra`) assigns work to
 workers who hold these roles.  Keeping roles in a registry - rather
 than scattering titles through the code - means the organisation
 chart can be audited, tested, and extended in one place, which is
@@ -71,7 +71,7 @@ __all__ = [
 
 
 class Seniority(str, Enum):
-    """Seniority levels in the Omevra Copilot organisation.
+    """Seniority levels in the Provome Copilot organisation.
 
     Every level is a senior level.  The ladder exists to express
     scope and sign-off authority, not to admit junior grades: the
@@ -145,7 +145,7 @@ class Role:
         if not self.seniority.is_senior:
             raise ValueError(
                 f"role {self.role_id!r} is not senior level; the "
-                "Omevra Copilot organisation defines senior roles only"
+                "Provome Copilot organisation defines senior roles only"
             )
 
     @property
@@ -185,7 +185,7 @@ def _roles() -> tuple[Role, ...]:
             title="Chief Copilot",
             seniority=Seniority.CHIEF,
             responsibilities=(
-                "Receive every question put to the Omevra Copilot and own the final answer or the final decline",
+                "Receive every question put to the Provome Copilot and own the final answer or the final decline",
                 "Classify each question by division and problem area and route it to the owning team",
                 "Assign sub-tasks to senior workers and collect their structured results",
                 "Order cross-checks, re-runs, and tiebreaks when workers disagree",

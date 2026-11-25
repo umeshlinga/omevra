@@ -1,8 +1,8 @@
-"""Tests for omevra.variant: VCF, HGVS c. and p. parsing."""
+"""Tests for provome.variant: VCF, HGVS c. and p. parsing."""
 
 import pytest
 
-from omevra.variant import (
+from provome.variant import (
     CodingVariantKind,
     ProteinVariantKind,
     VariantParseError,

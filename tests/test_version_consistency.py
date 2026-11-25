@@ -8,7 +8,7 @@ of drift fail loudly instead of shipping quietly.
 import re
 from pathlib import Path
 
-import omevra
+import provome
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -17,11 +17,11 @@ def test_package_version_matches_pyproject():
     pyproject = (ROOT / "pyproject.toml").read_text()
     match = re.search(r'^version = "([^"]+)"', pyproject, re.MULTILINE)
     assert match, "pyproject version not found"
-    assert omevra.__version__ == match.group(1)
+    assert provome.__version__ == match.group(1)
 
 
 def test_changelog_top_entry_matches():
     changelog = (ROOT / "CHANGELOG.md").read_text()
     match = re.search(r"^## \[([^\]]+)\]", changelog, re.MULTILINE)
     assert match, "changelog entry not found"
-    assert match.group(1) == omevra.__version__
+    assert match.group(1) == provome.__version__

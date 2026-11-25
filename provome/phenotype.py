@@ -33,7 +33,7 @@ mathematics, not epidemiological data.
 
 The mathematics here is ontology-agnostic: the same code scores
 similarity over a veterinary or plant trait ontology DAG, which is
-why :mod:`omevra.domains` lists phenotype similarity as a
+why :mod:`provome.domains` lists phenotype similarity as a
 species-agnostic engine with a division-specific ontology.
 """
 
@@ -359,4 +359,4 @@ def example_ontology() -> Ontology:
     and testing.  It is not the Human Phenotype Ontology, and its
     annotation counts are illustrative, not epidemiological.
     """
-    return Ontology(_EXAMPLE_TERMS, name="omevra-example-hpo-subset (illustrative)")
+    return Ontology(_EXAMPLE_TERMS, name="provome-example-hpo-subset (illustrative)")

@@ -1,8 +1,8 @@
-"""Tests for omevra.evidence: gate, deduplication, registry."""
+"""Tests for provome.evidence: gate, deduplication, registry."""
 
 import pytest
 
-from omevra.evidence import (
+from provome.evidence import (
     EvidenceItem,
     EvidenceKind,
     SourceRegistry,

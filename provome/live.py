@@ -7,7 +7,7 @@ fetches, and hands the Copilot evidence items whose citations carry
 the source, the record identifier, and the fetch date.
 
 Sources (all already registered in
-:func:`omevra.evidence.default_source_registry`):
+:func:`provome.evidence.default_source_registry`):
 
 * **ClinVar** via NCBI E-utilities (esearch + esummary) — curated
   clinical significance for the variant.
@@ -38,7 +38,7 @@ Design rules, inherited from the hardening work:
 
 Running this module directly performs a live run (network required):
 
-    python -m omevra.live
+    python -m provome.live
 
 Research software.  Not for clinical use.
 """

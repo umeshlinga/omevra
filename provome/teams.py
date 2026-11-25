@@ -1,6 +1,6 @@
 """Team registry: senior teams, each owning a slice of the work.
 
-If :mod:`omevra.roles` is the people layer of the Omevra Copilot
+If :mod:`provome.roles` is the people layer of the Provome Copilot
 organisation, this module is the org chart.  Work is divided the way
 a real research organisation divides it: **separate teams for
 separate problems**, each team led by a named senior role, each team
@@ -21,12 +21,12 @@ Shared services, which serve every division and never own a question
 on their own: the Evidence Verification Team, the Calibration and
 Benchmarks Team, and the QC Team.  They are marked ``routable =
 False``: the router sends questions to owning teams, and the
-orchestra (:mod:`omevra.orchestra`) calls the shared services in as
+orchestra (:mod:`provome.orchestra`) calls the shared services in as
 checkers on every question, which is a stronger guarantee than
 routing some questions to them and some away.
 
 Problem areas are taken from the division registry
-(:mod:`omevra.domains`) wherever a team's area is a division problem
+(:mod:`provome.domains`) wherever a team's area is a division problem
 area, so the org chart and the division registry cannot drift apart:
 if a division does not declare an area, no team can quietly claim to
 own it here without the mismatch being visible in the data.

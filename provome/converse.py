@@ -8,7 +8,7 @@ guide, not a printout.  This module is that guide.
 It sits strictly ON TOP of the gate:
 
 * Every factual sentence about biology comes from a finished,
-  gated :class:`~omevra.copilot.CopilotAnswer`.  The guide may
+  gated :class:`~provome.copilot.CopilotAnswer`.  The guide may
   choose order, depth, and tone; it may never add a claim, soften
   a decline, or hide a reason.
 * A DECLINE stays a decline.  The guide's job there is kindness
@@ -30,7 +30,7 @@ the one thing that matters), ``standard`` (the working answer), and
 Running this module directly demonstrates all three behaviours
 (offline provider; no network needed):
 
-    python -m omevra.converse
+    python -m provome.converse
 
 Research software.  Not for clinical use.
 """
@@ -95,9 +95,9 @@ TOOL_FACTS = {
 }
 
 _TOOL_PATTERNS = [
-    (re.compile(r"what (is|are) (provome|omevra|this tool|you)\b"), "what"),
-    (re.compile(r"how do (you|provome|omevra) work"), "how"),
-    (re.compile(r"what can (you|provome|omevra) do"), "what"),
+    (re.compile(r"what (is|are) (provome|provome|this tool|you)\b"), "what"),
+    (re.compile(r"how do (you|provome|provome) work"), "how"),
+    (re.compile(r"what can (you|provome|provome) do"), "what"),
     (re.compile(r"(animal|plant) division|do you cover|your coverage|drug discovery division"), "coverage"),
     (re.compile(r"(price|pricing|how much|subscription|is it free|free tier)"), "price"),
     (re.compile(r"(what sources|which databases|where do you get|your sources)"), "sources"),

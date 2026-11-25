@@ -1,9 +1,9 @@
-"""Tests for omevra.domains and division handling in the Copilot."""
+"""Tests for provome.domains and division handling in the Copilot."""
 
 import pytest
 
-from omevra.copilot import Copilot, CopilotQuestion
-from omevra.domains import (
+from provome.copilot import Copilot, CopilotQuestion
+from provome.domains import (
     ENGINE_ACMG,
     ENGINE_CALIBRATION,
     ENGINE_CONSEQUENCE,

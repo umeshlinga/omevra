@@ -1,16 +1,16 @@
-"""The Omevra Copilot: one copilot for variant, gene, and disease questions.
+"""The Provome Copilot: one copilot for variant, gene, and disease questions.
 
-There is exactly one copilot in Omevra.  It is not a chatbot bolted
+There is exactly one copilot in Provome.  It is not a chatbot bolted
 onto the side of the package, and there is no separate "bot": the
 Copilot is the question-answering surface of the evidence engine
 itself, and every design decision in it exists to keep its answers
 honest:
 
 * It answers a question about a variant, gene, or disease only from
-  :class:`~omevra.evidence.EvidenceItem` objects supplied by a
+  :class:`~provome.evidence.EvidenceItem` objects supplied by a
   pluggable evidence provider.
 * It enforces the cite-or-decline gate from
-  :mod:`omevra.evidence`: at least three verified evidence items
+  :mod:`provome.evidence`: at least three verified evidence items
   from at least two independent sources, or the output is a
   structured DECLINE that names exactly what is missing.
 * Every claim in an answer carries the citations of the items behind
@@ -24,7 +24,7 @@ honest:
   model access and makes no network calls.
 
 Divisions: a question may carry a division or species context (see
-:mod:`omevra.domains`).  The default is Human.  The division is
+:mod:`provome.domains`).  The default is Human.  The division is
 carried through to the structured answer, and the Copilot states
 plainly when a framework does not apply to a division - most
 importantly, ACMG/AMP classification is human-clinical specific and
@@ -33,7 +33,7 @@ is never silently applied to animal or plant questions.
 Running this module directly demonstrates both outcomes on bundled
 offline data:
 
-    python -m omevra.copilot
+    python -m provome.copilot
 
 prints one ANSWER case (CFTR p.Phe508del, enough verified evidence)
 and one DECLINE case (BRCA1 c.68_69delAG in the demo set, where the
@@ -71,7 +71,7 @@ __all__ = [
     "LLMHook",
     "DisabledLLMHook",
     "Copilot",
-    "OmevraCopilot",
+    "ProvomeCopilot",
     "OrchestratedCopilot",
     "main",
 ]
@@ -168,7 +168,7 @@ class CopilotAnswer:
         narrative: Optional rephrasing produced by an enabled LLM
             hook.  ``None`` unless a host application enabled one.
         qc_summary: When this answer came from the orchestrated
-            Copilot (:mod:`omevra.orchestra`), the QC report summary:
+            Copilot (:mod:`provome.orchestra`), the QC report summary:
             the six stages and which passed.  ``None`` for answers
             from the plain Copilot, which only applies the gate.
         audit_id: Id of the audit log for an orchestrated run, or
@@ -288,7 +288,7 @@ def _load_demo_data() -> dict:
 class OfflineDemoProvider:
     """Evidence provider backed by the bundled illustrative data set.
 
-    The data lives in ``omevra/data/demo_evidence.json`` and is
+    The data lives in ``provome/data/demo_evidence.json`` and is
     labelled illustrative in that file and in the README.  Topic
     recognition is simple alias matching, deliberately transparent:
     the longest alias found in the question wins, and no alias means
@@ -366,7 +366,7 @@ class DisabledLLMHook:
 
     def rephrase(self, answer: CopilotAnswer) -> str:
         raise RuntimeError(
-            "the LLM hook is disabled; Omevra answers are issued "
+            "the LLM hook is disabled; Provome answers are issued "
             "from gated evidence only"
         )
 
@@ -380,7 +380,7 @@ def _confidence(gate: GateDecision) -> float:
     (capped at two extra), for a maximum of 0.95.  This is a
     reporting heuristic about evidence depth, not a calibrated
     probability; calibrated probabilities are the business of
-    :mod:`omevra.calibration` applied to real evaluation data.
+    :mod:`provome.calibration` applied to real evaluation data.
     """
     extra_items = min(max(gate.verified_count - 3, 0), 3)
     extra_groups = min(max(gate.independent_source_count - 2, 0), 2)
@@ -388,7 +388,7 @@ def _confidence(gate: GateDecision) -> float:
 
 
 class Copilot:
-    """The Omevra Copilot.
+    """The Provome Copilot.
 
     Args:
         provider: Evidence provider.  Defaults to
@@ -552,20 +552,20 @@ class Copilot:
 
 
 #: Descriptive alias: there is one copilot, and this is its full name.
-OmevraCopilot = Copilot
+ProvomeCopilot = Copilot
 
 
 class OrchestratedCopilot:
     """The same one Copilot, running through the whole organisation.
 
     This is the user-facing entry point for the multi-agent
-    organisation in :mod:`omevra.orchestra`: one Copilot on the
+    organisation in :mod:`provome.orchestra`: one Copilot on the
     outside, with a Chief Copilot orchestrating senior teams and
     workers inside, six QC stages, and a full audit trail.  The
     plain :class:`Copilot` still exists for callers who want only
     the evidence gate; this class is the production surface.
 
-    The import of :mod:`omevra.orchestra` is deferred to
+    The import of :mod:`provome.orchestra` is deferred to
     construction so the two modules do not import each other at
     load time.
     """

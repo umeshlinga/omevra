@@ -1,6 +1,6 @@
 """Divisions: one evidence engine, three biological kingdoms of use.
 
-Omevra is not a human genetics tool with extra labels, and it is not
+Provome is not a human genetics tool with extra labels, and it is not
 a cancer tool.  It is an evidence engine - variant and sequence
 analysis, frequency mathematics, calibrated scoring, and a
 cite-or-decline gate - and that engine is pointed at three divisions:
@@ -28,7 +28,7 @@ division declares its scope, its problem areas, example species, and
   cite-or-decline evidence gate (a policy about proof, not about
   species) all transfer across divisions.
 * **Human-clinical specific engines.**  The ACMG/AMP criteria in
-  :mod:`omevra.acmg` (Richards et al. 2015; Tavtigian et al. 2018)
+  :mod:`provome.acmg` (Richards et al. 2015; Tavtigian et al. 2018)
   were written for human germline variant interpretation in a
   clinical setting.  They do not transfer to animals or plants, and
   this registry says so in data, so no caller can quietly apply a
@@ -80,7 +80,7 @@ ENGINE_ACMG = "acmg_classification"
 
 
 class Division(str, Enum):
-    """The three Omevra divisions."""
+    """The three Provome divisions."""
 
     HUMAN = "human"
     ANIMAL = "animal"

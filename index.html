@@ -2,13 +2,118 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Omevra has moved</title>
-<meta http-equiv="refresh" content="0; url=https://omevra.github.io/">
-<script>
-location.replace("https://omevra.github.io" + window.location.pathname.replace(/^\/omevra\/?/, "/") + window.location.search + window.location.hash);
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Provome — Proof, or an honest decline</title>
+<meta name="description" content="Provome is an evidence engine for biology. Every answer is built from checked evidence with named sources — or Provome declines and tells you exactly what is missing. Research software. Not for clinical use.">
+<style>
+  :root{ --ink:#101828; --muted:#475467; --line:#e4e7ec; --bg:#fbfcfe; --card:#ffffff; --accent:#0b6e4f; --accent2:#175cd3; --soft:#eef4ff; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Georgia,'Times New Roman',serif;color:var(--ink);background:var(--bg)}
+  .wrap{max-width:1020px;margin:0 auto;padding:0 22px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:12px;font-size:24px;letter-spacing:.5px}
+  nav a{color:var(--muted);text-decoration:none;margin-left:20px;font-size:15px}
+  nav a:hover{color:var(--ink)}
+  .hero{padding:64px 0 30px}
+  .kicker{font-size:12px;letter-spacing:3px;color:var(--accent);text-transform:uppercase}
+  h1{font-size:52px;line-height:1.08;margin:14px 0 16px}
+  h1 .thin{color:var(--accent2)}
+  .lede{font-size:20px;line-height:1.55;color:var(--muted);max-width:720px}
+  .cta{display:inline-block;margin-top:22px;background:var(--ink);color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;font-size:16px}
+  .cta.alt{background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin:26px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .card h3{margin:0 0 8px;font-size:19px}
+  .card p{margin:0;color:var(--muted);line-height:1.55;font-size:15.5px}
+  .tag{display:inline-block;font-size:12px;letter-spacing:1.5px;padding:3px 10px;border-radius:999px;margin-bottom:10px}
+  .live{background:#e7f6ee;color:var(--accent)}
+  .soon{background:var(--soft);color:var(--accent2)}
+  section{padding:34px 0}
+  h2{font-size:32px;margin:0 0 12px}
+  .sub{color:var(--muted);font-size:17px;line-height:1.55;max-width:760px}
+  .demo{background:#0b1526;color:#e6edf7;border-radius:18px;padding:26px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14.5px;line-height:1.65;overflow-x:auto}
+  .demo .q{color:#8ab4ff}.demo .a{color:#7ee2ae}.demo .src{color:#9aa7bd}
+  .price .amt{font-size:30px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);font-size:14px;line-height:1.6}
+</style>
 </head>
 <body>
-<p><a href="https://omevra.github.io/">This site has moved to omevra.github.io</a></p>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg width="30" height="40" viewBox="0 0 30 40" aria-hidden="true">
+        <path d="M8 2 C 26 10, 4 18, 22 26 C 26 28, 24 32, 12 38" fill="none" stroke="#175cd3" stroke-width="2.4"/>
+        <path d="M22 2 C 4 10, 26 18, 8 26 C 4 28, 6 32, 18 38" fill="none" stroke="#0b6e4f" stroke-width="2.4"/>
+        <line x1="9" y1="8" x2="21" y2="8" stroke="#98a2b3" stroke-width="1.6"/>
+        <line x1="7" y1="16" x2="23" y2="16" stroke="#98a2b3" stroke-width="1.6"/>
+        <line x1="10" y1="24" x2="20" y2="24" stroke="#98a2b3" stroke-width="1.6"/>
+        <line x1="11" y1="32" x2="19" y2="32" stroke="#98a2b3" stroke-width="1.6"/>
+      </svg>
+      <span><b>Provome</b></span>
+    </div>
+    <nav>
+      <a href="#how">How it works</a><a href="#proof">Live proof</a><a href="#divisions">Divisions</a><a href="#pricing">Pricing</a><a href="https://github.com/umeshlinga/provome">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="kicker">An evidence engine for biology</div>
+    <h1>Proof, <span class="thin">or an honest decline.</span></h1>
+    <p class="lede">Ask Provome about a gene and a variant. It fetches real evidence from the world's scientific databases, checks it through a cite-or-decline gate, and answers only when at least three verified items from two independent sources support the answer — each one named, with its fetch date. When the evidence is not there, Provome declines and tells you exactly what is missing. It never guesses.</p>
+    <a class="cta" href="#proof">See a live answer</a>
+    <a class="cta alt" href="https://github.com/umeshlinga/provome">Read the code</a>
+  </div>
+
+  <section id="how">
+    <h2>How it works</h2>
+    <p class="sub">One Copilot speaks to you. Behind it, specialist workers gather evidence, cross-check each other, and pass every result through quality stages and a senior review. Every run leaves an audit trail — and the Copilot shows its work.</p>
+    <div class="grid">
+      <div class="card"><h3>1 · You ask</h3><p>A gene and a variant, in plain language: “What is known about CFTR p.Phe508del?” The Copilot recognises the topic — or declines immediately if it cannot.</p></div>
+      <div class="card"><h3>2 · It fetches</h3><p>Live records from ClinVar, population frequencies from gnomAD when coordinates allow, and peer-reviewed literature via Europe PMC. Nothing is answered from memory.</p></div>
+      <div class="card"><h3>3 · The gate decides</h3><p>Three or more verified items, two or more independent sources, no unresolved refutation — or the answer is a decline with the exact reasons. The gate cannot be talked out of it.</p></div>
+    </div>
+  </section>
+
+  <section id="proof">
+    <h2>Live proof</h2>
+    <p class="sub">A real run of the Provome Copilot (live brain v0.3.0, human layer v0.4.0), fetched from the public internet — not demo data:</p>
+    <div class="demo">
+      <div class="q">Q: What is known about CFTR p.Phe508del?</div>
+      <div class="a">ANSWER · 3 verified items · 2 independent sources</div>
+      <div>ClinVar records NM_000492.4(CFTR):c.1522_1524del (p.Phe508del) with germline classification: <b>Pathogenic</b> (review status: criteria provided, single submitter).</div>
+      <div class="src">Source: ClinVar Variation ID 4072070, fetched live via NCBI E-utilities</div>
+      <div>Peer-reviewed literature: “Efficacy of Elexacaftor/Tezacaftor/Ivacaftor in Cystic Fibrosis Patients With Severe Lung Disease…” (2026)</div>
+      <div class="src">Source: PMID 42835559 via Europe PMC, fetched live</div>
+      <div class="q" style="margin-top:10px">Q: Tell me about the weather in Indianapolis</div>
+      <div class="a">DECLINE — no recognised variant topic; the Copilot declines rather than guessing.</div>
+    </div>
+    <p class="sub" style="margin-top:14px">The underlying variant-evidence engine is benchmarked in the open: AUROC 0.9705 on 10,357 scored variants (<a href="https://github.com/umeshlinga/vus-evidence-agent">vus-evidence-agent</a>).</p>
+  </section>
+
+  <section id="divisions">
+    <h2>Divisions — stated honestly</h2>
+    <div class="grid">
+      <div class="card"><span class="tag live">Live</span><h3>Human</h3><p>All human disease areas. Variant evidence is live and benchmarked today.</p></div>
+      <div class="card"><span class="tag soon">On the roadmap</span><h3>Animal</h3><p>Veterinary, livestock, and wildlife. Not claimed as covered until it is built and benchmarked — the Copilot declines there today.</p></div>
+      <div class="card"><span class="tag soon">On the roadmap</span><h3>Plant</h3><p>Crops and agriculture, worldwide. Same rule: built and benchmarked first, claimed second.</p></div>
+      <div class="card"><span class="tag soon">On the roadmap</span><h3>Drug Discovery</h3><p>Computational only: target evidence, variant-to-target reasoning, repurposing candidates. A patient-ready drug still needs synthesis, lab and animal testing, human trials, and regulatory approval through licensed partners — Provome never claims otherwise.</p></div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <h2>Pricing shape</h2>
+    <p class="sub">Freemium, like the tools researchers already live in. Checkout is not live yet — pilot access comes first.</p>
+    <div class="grid">
+      <div class="card price"><h3>Free</h3><div class="amt">$0</div><p>Core evidence tools open to every student and researcher.</p></div>
+      <div class="card price"><h3>Researcher</h3><div class="amt">$79</div><p>Deeper runs, full audit trails, saved workspaces.</p></div>
+      <div class="card price"><h3>Lab</h3><div class="amt">$499</div><p>Everything unlocked for a lab team, with priority support.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    Provome is research software. Not for clinical use. Nothing on this site or in the product is a clinical classification, a diagnosis, or medical advice, for humans, animals, or plants. Classifications can change as new evidence arrives; citations carry fetch dates so you can check currency yourself.<br>
+    Founded by Umesh Linga · Built in the open at <a href="https://github.com/umeshlinga/provome">github.com/umeshlinga/provome</a>
+  </footer>
+</div>
 </body>
 </html>

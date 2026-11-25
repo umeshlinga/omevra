@@ -1,6 +1,6 @@
 """The orchestra: one Copilot outside, an organisation inside.
 
-From the outside, Omevra has exactly one Copilot.  This module is
+From the outside, Provome has exactly one Copilot.  This module is
 what is inside it: a working organisation of senior specialist
 workers, arranged like a company and run like a production system.
 
@@ -8,9 +8,9 @@ The flow of every question:
 
 1. **Intake and routing.**  The Chief Copilot (the orchestrator in
    this module) classifies the question by division and routes it to
-   the owning senior team (:mod:`omevra.teams`).
+   the owning senior team (:mod:`provome.teams`).
 2. **Assignment.**  The Chief assigns sub-tasks to senior workers
-   (:mod:`omevra.roles`) drawn from a worker registry.  Workers are
+   (:mod:`provome.roles`) drawn from a worker registry.  Workers are
    lightweight records plus a callable, held in dictionaries and
    capability indexes, so the registry is designed to scale to
    thousands of registered specialist workers without changing the
@@ -225,7 +225,7 @@ def _claim_key(statement: str) -> str:
 class ClaimDraft:
     """One claim produced by a worker, before QC.
 
-    Unlike :class:`omevra.copilot.Claim`, a draft is allowed to be
+    Unlike :class:`provome.copilot.Claim`, a draft is allowed to be
     defective - it may lack citations, or carry an unverified number.
     Defects are exactly what screening and the QC pipeline exist to
     catch; a draft that survived screening and QC is promoted to a
@@ -514,7 +514,7 @@ class QCInput:
         context: Inputs the checkers recompute from (disease model,
             labels and scores, and similar).
         min_agreement: Distinct workers that must agree on each key
-            claim.  Two by default: no claim in an Omevra answer rests
+            claim.  Two by default: no claim in an Provome answer rests
             on one worker alone.
         unresolved_disagreements: Disagreements the team lead could
             not resolve.  Any nonzero count fails senior review.
@@ -534,7 +534,7 @@ class QCInput:
 def qc_evidence_gate(qc: QCInput) -> QCStageResult:
     """Stage 1: the cite-or-decline evidence gate.
 
-    Reuses :func:`omevra.evidence.evaluate_gate` unchanged: at least
+    Reuses :func:`provome.evidence.evaluate_gate` unchanged: at least
     three verified supporting items from at least two independent
     source groups, or this stage fails with the gate's own reasons.
     """
@@ -948,7 +948,7 @@ def _population_statement(model: DiseaseModel, value: float) -> str:
 
 _POPULATION_CITATION = (
     "Whiffin et al. 2017 maximum credible allele frequency "
-    "framework, computed with omevra.population"
+    "framework, computed with provome.population"
 )
 
 
@@ -957,9 +957,9 @@ class PopulationWorker(BuiltinWorker):
     """Computes the Whiffin maximum credible allele frequency.
 
     Two strategies, one expected number: ``"direct"`` calls
-    :func:`omevra.population.max_credible_af`; ``"evaluation"``
+    :func:`provome.population.max_credible_af`; ``"evaluation"``
     reaches the same ceiling through
-    :func:`omevra.population.evaluate_frequency`.  The claim carries
+    :func:`provome.population.evaluate_frequency`.  The claim carries
     the number as a registered numeric claim, so QC stage 3
     recomputes it a third time before it can be issued.
     """
@@ -1010,7 +1010,7 @@ def _consequence_statement(variant: str, term: str, residue: Optional[int]) -> s
 
 
 _CONSEQUENCE_CITATION = (
-    "omevra.consequence: standard genetic code consequence calling "
+    "provome.consequence: standard genetic code consequence calling "
     "on the supplied coding sequence"
 )
 
@@ -1020,9 +1020,9 @@ class ConsequenceWorker(BuiltinWorker):
     """Calls molecular consequence on a supplied CDS and variant.
 
     Two strategies: ``"engine"`` uses
-    :func:`omevra.consequence.call_consequence`; ``"verify"`` is an
+    :func:`provome.consequence.call_consequence`; ``"verify"`` is an
     independent derivation - it edits the sequence with
-    :func:`omevra.consequence.apply_coding_variant`, translates both
+    :func:`provome.consequence.apply_coding_variant`, translates both
     proteins codon by codon, and derives the term from the protein
     comparison itself.  If the two derivations ever disagree, the
     claims differ, the orchestra records a disagreement, and the
@@ -1082,7 +1082,7 @@ def _acmg_statement(total: int, by_points: str, by_rules: str) -> str:
 
 _ACMG_CITATION = (
     "Richards et al. 2015 combining rules and Tavtigian et al. 2018 "
-    "points, computed with omevra.acmg"
+    "points, computed with provome.acmg"
 )
 
 
@@ -1090,7 +1090,7 @@ _ACMG_CITATION = (
 class AcmgWorker(BuiltinWorker):
     """Classifies supplied ACMG assessments under both frameworks.
 
-    ``"report"`` uses :func:`omevra.acmg.classify`; ``"recompute"``
+    ``"report"`` uses :func:`provome.acmg.classify`; ``"recompute"``
     rebuilds the same outcome from ``total_points``,
     ``classify_by_points``, and ``classify_by_richards_rules``
     separately.  Human division, clinical context only - the
@@ -1129,7 +1129,7 @@ def _calibration_statement(auroc_value: float, ece_value: float, n: int) -> str:
 
 
 _CALIBRATION_CITATION = (
-    "omevra.calibration: rank-method AUROC and binned ECE, computed "
+    "provome.calibration: rank-method AUROC and binned ECE, computed "
     "from the supplied labels and scores"
 )
 
@@ -1138,7 +1138,7 @@ _CALIBRATION_CITATION = (
 class CalibrationWorker(BuiltinWorker):
     """Evaluates supplied labels and scores.
 
-    ``"report"`` uses :func:`omevra.calibration.evaluate`;
+    ``"report"`` uses :func:`provome.calibration.evaluate`;
     ``"recompute"`` rebuilds AUROC and ECE from ``auroc`` and
     ``calibration_table`` directly.  The AUROC is carried as a
     registered numeric claim for QC stage 3.
@@ -1177,7 +1177,7 @@ def _phenotype_statement(similarity: float) -> str:
 
 
 _PHENOTYPE_CITATION = (
-    "omevra.phenotype: Resnik semantic similarity over the bundled "
+    "provome.phenotype: Resnik semantic similarity over the bundled "
     "illustrative ontology subset"
 )
 
@@ -1186,8 +1186,8 @@ _PHENOTYPE_CITATION = (
 class PhenotypeWorker(BuiltinWorker):
     """Compares two phenotype term sets on the example ontology.
 
-    ``"compare"`` uses :func:`omevra.phenotype.compare_term_sets`;
-    ``"average"`` uses :func:`omevra.phenotype.best_match_average`.
+    ``"compare"`` uses :func:`provome.phenotype.compare_term_sets`;
+    ``"average"`` uses :func:`provome.phenotype.best_match_average`.
     Both are the same published mathematics reached by two routes.
     """
 
@@ -1349,7 +1349,7 @@ class OrchestratedAnswer:
     """Full record of one orchestrated run.
 
     Attributes:
-        answer: The issued :class:`omevra.copilot.CopilotAnswer`
+        answer: The issued :class:`provome.copilot.CopilotAnswer`
             (ANSWER with QC summary and audit id attached, or
             DECLINE with every failed QC stage named).
         team: The team the question was routed to.

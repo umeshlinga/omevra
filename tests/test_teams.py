@@ -1,10 +1,10 @@
-"""Tests for omevra.teams: the team registry and question routing."""
+"""Tests for provome.teams: the team registry and question routing."""
 
 import pytest
 
-from omevra.domains import Division, get_division
-from omevra.roles import default_role_registry
-from omevra.teams import (
+from provome.domains import Division, get_division
+from provome.roles import default_role_registry
+from provome.teams import (
     TEAM_ANIMAL_HEALTH,
     TEAM_CALIBRATION_BENCHMARKS,
     TEAM_CANCER,

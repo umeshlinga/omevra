@@ -1,6 +1,6 @@
 """Evidence models, source registry, verification, and the cite-or-decline gate.
 
-This module is the trust layer of Omevra.  Every statement the Omevra
+This module is the trust layer of Provome.  Every statement the Provome
 Copilot is allowed to make has to be backed by :class:`EvidenceItem`
 objects, and those objects have to survive three independent checks:
 
@@ -16,7 +16,7 @@ objects, and those objects have to survive three independent checks:
    they never count toward the gate.
 
 3. **The gate.**  :func:`evaluate_gate` implements the cite-or-decline
-   rule used across Omevra: a question is answerable only when at least
+   rule used across Provome: a question is answerable only when at least
    ``MIN_VERIFIED_ITEMS`` verified items from at least
    ``MIN_INDEPENDENT_SOURCES`` independent source groups support it.
    Anything less produces a structured decline with explicit reasons,
@@ -193,7 +193,7 @@ class SourceRegistry:
 
 
 def default_source_registry() -> SourceRegistry:
-    """Build the registry of sources Omevra knows about out of the box.
+    """Build the registry of sources Provome knows about out of the box.
 
     These are real, well known resources in human genetics.  Listing a
     source here does not mean this package queries it; the offline
@@ -256,8 +256,8 @@ def default_source_registry() -> SourceRegistry:
             ),
             Source(
                 source_id="demo-bundled",
-                name="Omevra bundled illustrative examples",
-                independence_group="omevra-demo",
+                name="Provome bundled illustrative examples",
+                independence_group="provome-demo",
                 description=(
                     "Small hand-checked example set bundled with this "
                     "package for offline demonstration and testing. "
@@ -266,8 +266,8 @@ def default_source_registry() -> SourceRegistry:
             ),
             Source(
                 source_id="demo-bundled-2",
-                name="Omevra bundled illustrative examples, second set",
-                independence_group="omevra-demo-2",
+                name="Provome bundled illustrative examples, second set",
+                independence_group="provome-demo-2",
                 description=(
                     "Second illustrative example set, curated "
                     "separately from the first set so the offline "

@@ -6,7 +6,7 @@ This module answers a concrete question: given a coding sequence
 It contains the full standard genetic code (all 64 codons, NCBI
 translation table 1), a translator that refuses partial or invalid
 input instead of guessing, an editor that applies a parsed
-:class:`~omevra.variant.CodingVariant` to the CDS after checking the
+:class:`~provome.variant.CodingVariant` to the CDS after checking the
 stated reference bases against the actual sequence, and a consequence
 caller that compares the reference and edited proteins residue by
 residue.

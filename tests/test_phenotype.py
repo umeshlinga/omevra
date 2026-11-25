@@ -1,10 +1,10 @@
-"""Tests for omevra.phenotype: IC, Resnik, best-match average."""
+"""Tests for provome.phenotype: IC, Resnik, best-match average."""
 
 import math
 
 import pytest
 
-from omevra.phenotype import (
+from provome.phenotype import (
     Ontology,
     OntologyTerm,
     best_match_average,

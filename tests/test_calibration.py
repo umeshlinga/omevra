@@ -1,10 +1,10 @@
-"""Tests for omevra.calibration: AUROC, Brier, ECE, log loss."""
+"""Tests for provome.calibration: AUROC, Brier, ECE, log loss."""
 
 import math
 
 import pytest
 
-from omevra.calibration import (
+from provome.calibration import (
     auroc,
     brier_score,
     calibration_table,

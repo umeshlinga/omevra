@@ -1,8 +1,8 @@
-"""Tests for omevra.roles: the senior role registry."""
+"""Tests for provome.roles: the senior role registry."""
 
 import pytest
 
-from omevra.roles import (
+from provome.roles import (
     ROLE_ANIMAL_DIVISION_LEAD,
     ROLE_CHIEF_COPILOT,
     ROLE_HUMAN_DIVISION_LEAD,
