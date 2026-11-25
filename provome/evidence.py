@@ -266,6 +266,17 @@ def default_source_registry() -> SourceRegistry:
                 base_url="https://www.ebi.ac.uk/chembl/",
             ),
             Source(
+                source_id="ensembl",
+                name="Ensembl",
+                independence_group="ensembl",
+                description=(
+                    "Ensembl genome browser: gene, variation, and "
+                    "phenotype records across animal and other "
+                    "non-human species, via the Ensembl REST API."
+                ),
+                base_url="https://rest.ensembl.org/",
+            ),
+            Source(
                 source_id="demo-bundled",
                 name="Provome bundled illustrative examples",
                 independence_group="provome-demo",

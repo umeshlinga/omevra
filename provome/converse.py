@@ -74,8 +74,10 @@ TOOL_FACTS = {
         "benchmarked for variant evidence (AUROC 0.9705 on the "
         "public benchmark), and Drug Discovery target evidence is "
         "live (v0.6.0, ChEMBL-backed, computational only). The "
-        "Animal and Plant divisions are on the roadmap and are NOT "
-        "claimed as covered until each is built and benchmarked. "
+        "Animal division has a first live provider (v0.8.0, "
+        "Ensembl-backed) but is in build and unbenchmarked, so it "
+        "is NOT claimed as covered; the Plant division is on the "
+        "roadmap. Coverage is claimed only after a benchmark. "
         "Provome is research software, not for clinical use."
     ),
     "price": (

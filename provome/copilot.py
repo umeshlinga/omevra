@@ -433,11 +433,21 @@ class Copilot:
                 "applied outside the Human division"
             )
 
-        # Hardening (Worker A Bug 2): the bundled evidence set is
-        # human-division evidence. It must never be issued as an
-        # answer in the Animal or Plant divisions, whose evidence
-        # is not yet division-scoped or benchmarked.
-        if question.division is not Division.HUMAN:
+        # Hardening (Worker A Bug 2): human-division evidence must
+        # never be issued as an answer in the Animal or Plant
+        # divisions. The guard is provider-scoped: a provider
+        # declares the divisions its evidence is genuinely scoped
+        # to via ``scoped_divisions`` (default: Human only, which
+        # covers the bundled demo set and the live human provider).
+        # A division-scoped provider (e.g. the Animal provider,
+        # whose items come from species-specific records) may
+        # answer in its own division - still through the unchanged
+        # cite-or-decline gate, and still unbenchmarked until a
+        # division benchmark exists.
+        scoped = getattr(
+            self.provider, "scoped_divisions", frozenset({Division.HUMAN})
+        )
+        if question.division not in scoped:
             return self._finish(
                 CopilotAnswer(
                     verdict=Verdict.DECLINE,
@@ -447,12 +457,13 @@ class Copilot:
                     division_name=division_info.name,
                     species=question.species,
                     declined_reasons=(
-                        f"the {division_info.name} division is an "
-                        "expansion division: its evidence is not yet "
-                        "division-scoped or benchmarked, and human "
-                        "clinical evidence is never issued outside "
-                        "the Human division; the Copilot declines "
-                        "rather than leaking human evidence into a "
+                        f"this evidence provider is not scoped to "
+                        f"the {division_info.name} division: its "
+                        "evidence is not division-scoped or "
+                        "benchmarked for it, and evidence is never "
+                        "issued outside the division it was gathered "
+                        "for; the Copilot declines rather than "
+                        f"leaking out-of-division evidence into a "
                         f"{division_info.name} answer",
                     ),
                     warnings=tuple(warnings),

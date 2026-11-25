@@ -3,6 +3,24 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.8.0] - 2026-11-25
+
+LLM track Stage A + Animal division v1 + a division-scoping fix.
+`provome/rag.py`: retrieval index with a pluggable embedder
+protocol (stdlib TF-IDF baseline built in; neural embedders plug
+in without caller changes) and an evidence bridge whose rule is
+that similarity ranks but never verifies - only documents with a
+real PMID become verified evidence. `provome/animal.py`: Animal
+division provider (Ensembl REST + species-restricted Europe PMC
+literature) under the unchanged cite-or-decline gate, veterinary
+RUO boundary on every output; live-verified on canine ABCB1
+(ANSWER, 3 items / 2 sources). Division scoping fix (CEO):
+providers now declare `scoped_divisions`; the Copilot declines
+out-of-scope divisions per provider instead of either leaking
+human evidence into Animal answers or blocking genuinely
+animal-scoped evidence. Animal remains in build and
+unbenchmarked - coverage is not claimed. Suite 281.
+
 ## [0.7.0] - 2026-11-25
 
 Step 6: freemium tiers as real product structure. Built by two
