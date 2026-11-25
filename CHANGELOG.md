@@ -3,6 +3,20 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.12.0] - 2026-11-25
+
+Quality Division built in code (Founder's direction: quality
+covers the ENTIRE company, every department). `provome/quality.py`
+registers 2,000 independent checkers across all 18 departments -
+orchestra, research division, the three doors, drug discovery,
+bridge, and all 11 disease corps - each with a distinct
+(department, method, beat) assignment; every department is
+covered by all 12 checking methods, so any important claim can be
+verified by two different methods (no-identical-checks law). One
+Chief Quality Copilot, a senior QA lead per department, and the
+stop-the-line veto structure. A checker with no live dispatched
+check passes nothing. Suite 293.
+
 ## [0.11.0] - 2026-11-25
 
 Diabetes stands as its own corps at 20,000 researchers
