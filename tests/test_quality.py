@@ -48,7 +48,10 @@ def test_checker_without_assignment_passes_nothing():
     registry = build_quality_division()
     worker = registry.all()[0]
     result = worker.run(
-        WorkTask(task_id="t1", kind="check"),
+        WorkTask(
+            task_id="t1", kind="check", topic_key="t",
+            team_id="quality-orchestra",
+        ),
         WorkContext(
             question=None, topic_key="t", items=(),
             source_registry=None, team=None,

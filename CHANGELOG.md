@@ -3,6 +3,11 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.12.1] - 2026-11-25
+
+Fix: the Quality Division honesty test constructed WorkTask
+without its required fields; corrected. No behaviour change.
+
 ## [0.12.0] - 2026-11-25
 
 Quality Division built in code (Founder's direction: quality
