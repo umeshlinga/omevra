@@ -56,7 +56,7 @@ from .copilot import (
 from .domains import Division, get_division
 from .evidence import EvidenceItem, evaluate_gate
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 __all__ = [
     "acmg",

@@ -72,11 +72,11 @@ TOOL_FACTS = {
     "coverage": (
         "Honest coverage, today: the Human division is live and "
         "benchmarked for variant evidence (AUROC 0.9705 on the "
-        "public benchmark). The Animal and Plant divisions and the "
-        "computational Drug Discovery division are on the roadmap "
-        "and are NOT claimed as covered until each is built and "
-        "benchmarked. Provome is research software, not for "
-        "clinical use."
+        "public benchmark), and Drug Discovery target evidence is "
+        "live (v0.6.0, ChEMBL-backed, computational only). The "
+        "Animal and Plant divisions are on the roadmap and are NOT "
+        "claimed as covered until each is built and benchmarked. "
+        "Provome is research software, not for clinical use."
     ),
     "price": (
         "The planned shape is freemium: a free tier with core tools "

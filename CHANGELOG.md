@@ -3,6 +3,12 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.6.1] - 2026-11-25
+
+Copilot coverage fact sheet updated for Step 5: Drug Discovery
+target evidence is live (computational only); Animal and Plant
+remain honestly not covered.
+
 ## [0.6.0] - 2026-11-25
 
 Step 5: the Drug Discovery division, v1 (`provome/drug.py`).
