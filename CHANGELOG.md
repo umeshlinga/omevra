@@ -3,6 +3,19 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.7.0] - 2026-11-25
+
+Step 6: freemium tiers as real product structure. Built by two
+specialist workers, CEO-verified. `provome/tiers.py`: Free $0 /
+Researcher $79 / Lab $499 entitlements (daily live questions,
+batch size, audit-trail access, seats, priority support) with
+denials that name the limit and the unlocking tier.
+`provome/usage.py`: per-account daily metering with JSON
+persistence and honest quota decisions (limit reached -> message
+names the next-day reset; nothing silently dropped). Checkout
+and billing remain Step 8 and are not claimed. 17 new tests;
+suite 260.
+
 ## [0.6.1] - 2026-11-25
 
 Copilot coverage fact sheet updated for Step 5: Drug Discovery
