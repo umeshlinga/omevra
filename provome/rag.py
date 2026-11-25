@@ -50,7 +50,9 @@ Design:
 * :class:`RetrievalIndex` is in-memory.  Document vectors are cached
   and recomputed whenever the corpus changes (a lexical embedder's
   weights depend on the whole corpus, so an addition can change
-  every vector).  A production deployment would persist vectors in
+  every vector), and search runs over an inverted index over the
+  sparse vectors, so a query scores only documents that share a
+  term with it.  A production deployment would persist the index in
   an approximate-nearest-neighbour store; the interface here —
   ``add`` / ``search`` — is the part that must not change.
 
@@ -269,6 +271,21 @@ class RetrievalIndex:
     (score 0) are not retrieved at all — retrieval means overlap,
     and padding a result list with unrelated documents would dress
     absence up as a weak match.
+
+    Implementation (strengthening pass, 2026-11-25): search runs
+    over an **inverted index**.  Document vectors are stored sparse
+    (term index -> weight, zeros dropped) with a posting list per
+    term, so a query scores only the documents that share at least
+    one term with it — the only documents whose cosine can be
+    nonzero.  The scores are the same cosine the original linear
+    scan computed (same vectors, same norms, same clamping); what
+    changed is that the scan no longer visits every document for
+    every query.  The evaluation had measured the linear scan as
+    the agent layer's throughput bottleneck (~95 queries/min over
+    a 1,920-document corpus); the inverted index removes the
+    per-query corpus factor for sparse lexical vectors.  A dense
+    embedder (few zero weights) degenerates gracefully to scoring
+    most of the corpus, which is correct, just not faster.
     """
 
     def __init__(self, embedder: Optional[Embedder] = None) -> None:
@@ -276,8 +293,10 @@ class RetrievalIndex:
             embedder if embedder is not None else LexicalEmbedder()
         )
         self._documents: dict[str, Document] = {}
-        self._vectors: dict[str, tuple[float, ...]] = {}
-        self._vectors_dirty = True
+        self._sparse: dict[str, dict[int, float]] = {}
+        self._norms: dict[str, float] = {}
+        self._postings: dict[int, tuple[str, ...]] = {}
+        self._index_dirty = True
 
     def __len__(self) -> int:
         return len(self._documents)
@@ -291,22 +310,37 @@ class RetrievalIndex:
         if callable(observe):
             observe(document.indexed_text)
         # Corpus statistics may have changed every document's
-        # vector; all cached vectors are stale until recomputed.
-        self._vectors_dirty = True
+        # vector; the whole index is stale until rebuilt.
+        self._index_dirty = True
 
     def add_many(self, documents: Iterable[Document]) -> None:
         """Add several documents, in order."""
         for document in documents:
             self.add(document)
 
-    def _ensure_vectors(self) -> None:
-        if not self._vectors_dirty:
+    def _ensure_index(self) -> None:
+        if not self._index_dirty:
             return
-        self._vectors = {
-            doc_id: self._embedder.embed(document.indexed_text)
-            for doc_id, document in self._documents.items()
+        self._sparse = {}
+        self._norms = {}
+        postings: dict[int, list[str]] = {}
+        for doc_id, document in self._documents.items():
+            vector = self._embedder.embed(document.indexed_text)
+            sparse = {
+                axis: weight
+                for axis, weight in enumerate(vector)
+                if weight != 0.0
+            }
+            self._sparse[doc_id] = sparse
+            self._norms[doc_id] = math.sqrt(
+                sum(w * w for w in vector)
+            )
+            for axis in sparse:
+                postings.setdefault(axis, []).append(doc_id)
+        self._postings = {
+            axis: tuple(doc_ids) for axis, doc_ids in postings.items()
         }
-        self._vectors_dirty = False
+        self._index_dirty = False
 
     def search(self, query: str, k: int = 5) -> list[tuple[Document, float]]:
         """Return the ``k`` most similar documents, best first.
@@ -318,13 +352,35 @@ class RetrievalIndex:
             raise ValueError("k must be at least 1")
         if not self._documents:
             return []
-        self._ensure_vectors()
+        self._ensure_index()
         query_vector = self._embedder.embed(query)
+        query_sparse = {
+            axis: weight
+            for axis, weight in enumerate(query_vector)
+            if weight != 0.0
+        }
+        if not query_sparse:
+            return []
+        query_norm = math.sqrt(sum(w * w for w in query_vector))
+        if query_norm == 0.0:
+            return []
+        candidates: set[str] = set()
+        for axis in query_sparse:
+            candidates.update(self._postings.get(axis, ()))
         scored: list[tuple[Document, float]] = []
-        for doc_id, document in self._documents.items():
-            score = _cosine(query_vector, self._vectors[doc_id])
+        for doc_id in candidates:
+            doc_sparse = self._sparse[doc_id]
+            dot = sum(
+                weight * doc_sparse[axis]
+                for axis, weight in query_sparse.items()
+                if axis in doc_sparse
+            )
+            doc_norm = self._norms[doc_id]
+            if doc_norm == 0.0 or dot == 0.0:
+                continue
+            score = min(1.0, max(0.0, dot / (query_norm * doc_norm)))
             if score > 0.0:
-                scored.append((document, score))
+                scored.append((self._documents[doc_id], score))
         scored.sort(key=lambda pair: (-pair[1], pair[0].doc_id))
         return scored[:k]
 
