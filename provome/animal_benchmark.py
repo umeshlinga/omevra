@@ -342,6 +342,19 @@ _FIXTURE_JSON = r"""{"lookup":{"canis_lupus_familiaris/ABCB1":{"id":"ENSCAFG0084
 
 _FIXTURES = json.loads(_FIXTURE_JSON)
 
+# PubMed titles for the independent re-confirmation lookup the
+# provider now performs (gate hardening, 2026-11-25): the recorded
+# Europe PMC records above are real papers, and the honest PubMed
+# in this fixture world resolves exactly those PMIDs to the same
+# recorded titles.  A PMID the recorded literature never served
+# does not resolve.
+_PUBMED_TITLES = {
+    record["pmid"]: record["title"]
+    for records in _FIXTURES["literature"].values()
+    for record in records
+    if record.get("pmid")
+}
+
 
 def fixture_transport(url: str, body: Optional[dict] = None) -> dict:
     """Replay the recorded live payloads. No network, deterministic.
@@ -366,6 +379,12 @@ def fixture_transport(url: str, body: Optional[dict] = None) -> dict:
         if payload is None:
             raise RuntimeError(f"recorded HTTP 400 for phenotype {gene_id}")
         return copy.deepcopy(payload)
+    if "esummary" in url and "db=pubmed" in url:
+        pmid = url.rsplit("id=", 1)[1]
+        title = _PUBMED_TITLES.get(pmid)
+        if title is None:
+            return {"result": {"uids": []}}
+        return {"result": {"uids": [pmid], pmid: {"title": title}}}
     if "europepmc" in url:
         subject = urllib.parse.unquote(url).split('"')[1]
         results = _FIXTURES["literature"][subject]

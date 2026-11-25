@@ -10,7 +10,19 @@ from provome.drug import DrugCopilot, DrugEvidenceProvider, parse_drug_query
 FIXED = date(2026, 11, 25)
 
 
+_PUBMED_TITLES = {
+    "12345678": "Targeted therapy for CFTR.",
+    "23456789": "CFTR potentiators reviewed.",
+}
+
+
 def fixture_transport(url, body=None):
+    if "esummary" in url and "db=pubmed" in url:
+        pmid = url.rsplit("id=", 1)[1]
+        title = _PUBMED_TITLES.get(pmid)
+        if title is None:
+            return {"result": {"uids": []}}
+        return {"result": {"uids": [pmid], pmid: {"title": title}}}
     if "uniprot" in url:
         return {"results": [{"primaryAccession": "P13569"}]}
     if "target/search" in url:

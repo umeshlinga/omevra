@@ -61,7 +61,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 from datetime import date
-from typing import Iterable, Optional, Protocol, Sequence, runtime_checkable
+from typing import Callable, Iterable, Optional, Protocol, Sequence, runtime_checkable
 
 from .evidence import (
     EvidenceItem,
@@ -345,6 +345,7 @@ def evidence_from_retrieval(
     topic_key: str,
     k: int = 5,
     min_score: float = 0.0,
+    confirmer: Optional[Callable[[str, str], VerificationStatus]] = None,
 ) -> list[EvidenceItem]:
     """Turn top retrieved, identifier-carrying documents into evidence.
 
@@ -358,6 +359,20 @@ def evidence_from_retrieval(
     :meth:`RetrievalIndex.search`, but they never reach the gate
     through this bridge.
 
+    Honest limit of the default rule (gate hardening audit,
+    2026-11-25): an identifier's *shape* is not proof the record
+    exists — a fabricated corpus document carrying ``pmid:99999999``
+    satisfies the default rule, because the bridge's trust boundary
+    is corpus ingest: the corpus is supposed to be built from real
+    fetches, stamped with ``fetched_on``.  A deployment that cannot
+    vouch for its corpus ingest should pass ``confirmer`` — a
+    ``(pmid, title) -> VerificationStatus`` callable such as
+    :func:`provome.confirmation.make_pubmed_confirmer` — and each
+    document is then held to the same independent PubMed
+    re-confirmation standard as the live providers' literature.
+    The confirmer's status replaces VERIFIED; its items are carried
+    with that status and never silently upgraded.
+
     Args:
         index: The index to search.
         query: The retrieval query.
@@ -367,9 +382,12 @@ def evidence_from_retrieval(
             items that share it.
         k: Maximum documents to consider from the search.
         min_score: Drop retrieved documents scoring below this.
+        confirmer: Optional live re-confirmation callable; see
+            above.  ``None`` (the default) applies the ingest-trust
+            bridge rule exactly as before.
 
     Returns:
-        Verified :class:`EvidenceItem` objects, in retrieval order.
+        :class:`EvidenceItem` objects, in retrieval order.
     """
     if not topic_key or not topic_key.strip():
         raise ValueError("topic_key must be a non-empty string")
@@ -380,6 +398,23 @@ def evidence_from_retrieval(
         pmid = document_pmid(document)
         if pmid is None:
             continue
+        if confirmer is not None:
+            status = confirmer(pmid, document.title)
+            notes = (
+                f"retrieved from the local index with similarity "
+                f"score {score:.3f}; independently re-confirmed "
+                f"via the supplied confirmer, which returned "
+                f"{status.value}"
+            )
+        else:
+            status = VerificationStatus.VERIFIED
+            notes = (
+                f"retrieved from the local index with similarity "
+                f"score {score:.3f}; marked verified under the "
+                f"bridge rule because the document carries PMID "
+                f"{pmid} — the identifier, not the score, is the "
+                f"verification"
+            )
         items.append(
             EvidenceItem(
                 item_id=f"rag-pmid-{pmid}",
@@ -395,18 +430,12 @@ def evidence_from_retrieval(
                 ),
                 kind=EvidenceKind.LITERATURE_REPORT,
                 direction=SupportDirection.SUPPORTS,
-                status=VerificationStatus.VERIFIED,
+                status=status,
                 locator=(
                     document.url
                     or f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
                 ),
-                notes=(
-                    f"retrieved from the local index with similarity "
-                    f"score {score:.3f}; marked verified under the "
-                    f"bridge rule because the document carries PMID "
-                    f"{pmid} — the identifier, not the score, is the "
-                    f"verification"
-                ),
+                notes=notes,
             )
         )
     return items

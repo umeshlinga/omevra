@@ -15,7 +15,19 @@ from provome.plant import (
 FIXED = date(2026, 11, 25)
 
 
+_PUBMED_TITLES = {
+    "44444444": "FLC and the control of flowering time.",
+    "55555555": "Vernalization requires FLC silencing.",
+}
+
+
 def fixture_transport(url, body=None):
+    if "esummary" in url and "db=pubmed" in url:
+        pmid = url.rsplit("id=", 1)[1]
+        title = _PUBMED_TITLES.get(pmid)
+        if title is None:
+            return {"result": {"uids": []}}
+        return {"result": {"uids": [pmid], pmid: {"title": title}}}
     if "lookup/symbol/arabidopsis_thaliana/FLC" in url:
         return {
             "id": "AT5G10140",

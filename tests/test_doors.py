@@ -29,7 +29,25 @@ ROOT = Path(__file__).resolve().parent.parent
 # -- fixture transports ---------------------------------------------------
 
 
+_PUBMED_TITLES = {
+    "11111111": "ABCB1 mutation and drug sensitivity in Collies.",
+    "22222222": "MDR1 genotyping in herding breed dogs.",
+    "44444444": "FLC and the control of flowering time.",
+    "55555555": "Vernalization requires FLC silencing.",
+}
+
+
+def _pubmed(url):
+    pmid = url.rsplit("id=", 1)[1]
+    title = _PUBMED_TITLES.get(pmid)
+    if title is None:
+        return {"result": {"uids": []}}
+    return {"result": {"uids": [pmid], pmid: {"title": title}}}
+
+
 def animal_transport(url, body=None):
+    if "esummary" in url and "db=pubmed" in url:
+        return _pubmed(url)
     if "lookup/symbol/canis_lupus_familiaris/ABCB1" in url:
         return {
             "id": "ENSCAFG00000000001",
@@ -71,6 +89,8 @@ def animal_transport(url, body=None):
 
 
 def plant_transport(url, body=None):
+    if "esummary" in url and "db=pubmed" in url:
+        return _pubmed(url)
     if "lookup/symbol/arabidopsis_thaliana/FLC" in url:
         return {
             "id": "AT5G10140",

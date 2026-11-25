@@ -43,6 +43,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Callable, Optional, Sequence
 
+from .confirmation import confirm_literature
 from .copilot import Copilot, CopilotQuestion
 from .domains import Division
 from .evidence import (
@@ -408,6 +409,10 @@ class AnimalEvidenceProvider:
             title = record.get("title")
             if not pmid or not title:
                 continue
+            # Gate hardening (2026-11-25): independent PubMed
+            # re-confirmation before a paper counts as VERIFIED;
+            # see provome.confirmation.
+            status, note = confirm_literature(self.transport, pmid, title)
             items.append(
                 EvidenceItem(
                     item_id=f"animal-lit-{pmid}",
@@ -423,7 +428,8 @@ class AnimalEvidenceProvider:
                     ),
                     kind=EvidenceKind.LITERATURE_REPORT,
                     direction=SupportDirection.SUPPORTS,
-                    status=VerificationStatus.VERIFIED,
+                    status=status,
+                    notes=note,
                 )
             )
             if len(items) >= 2:

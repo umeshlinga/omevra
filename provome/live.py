@@ -39,7 +39,11 @@ Design rules, inherited from the hardening work:
   the record actually came back from the source in this fetch and
   the fields used were present.  A source that errors, times out, or
   returns nothing contributes no items — silence is never dressed
-  up as evidence.
+  up as evidence.  Literature items face a second, independent
+  check: the PMID is re-confirmed against PubMed (NCBI, a different
+  operator than the Europe PMC search feed) and the titles must
+  match, or the item is demoted and never counts toward the gate
+  (see :mod:`provome.confirmation`; gate hardening, 2026-11-25).
 * **Fetch dates everywhere.**  Every citation records the date the
   record was fetched, so an answer can always be re-checked against
   the source as it stood.
@@ -62,6 +66,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Callable, Optional, Sequence
 
+from .confirmation import confirm_literature
 from .copilot import Copilot
 from .evidence import (
     EvidenceItem,
@@ -446,6 +451,7 @@ class LiveEvidenceProvider:
         )
         result = summary.get("result", {})
         items: list[EvidenceItem] = []
+        seen_interpretations: set = set()
         for uid in result.get("uids", [])[:20]:
             record = result.get(uid, {})
             title = record.get("title", "")
@@ -481,6 +487,23 @@ class LiveEvidenceProvider:
                             loc.get("ref"),
                             loc.get("alt"),
                         )
+            # Gate hardening (2026-11-25): ClinVar restates one
+            # variant interpretation across transcript versions
+            # (e.g. CFTR p.Phe508del on NM_000492.3 and NM_000492.4
+            # arrives as two Variation IDs with the same protein
+            # change and the same classification).  That is one
+            # interpretation line, not two: emit one item per
+            # (protein change, classification) pair.  The measures
+            # above are still collected from every record, because
+            # the dbSNP cross-reference Step 3b needs may live on
+            # any of them.  Records with no protein change are
+            # never collapsed — too little is known to call them
+            # the same line.
+            if protein_change:
+                interpretation = (protein_change, significance.strip().lower())
+                if interpretation in seen_interpretations:
+                    continue
+                seen_interpretations.add(interpretation)
             items.append(
                 EvidenceItem(
                     item_id=f"live-clinvar-{uid}",
@@ -733,6 +756,13 @@ class LiveEvidenceProvider:
             year = record.get("pubYear", "")
             if not title or not pmid:
                 continue
+            # Gate hardening (2026-11-25): the search feed's word
+            # alone no longer makes a paper VERIFIED.  Each PMID is
+            # independently re-confirmed against PubMed (a different
+            # service and operator) and the titles must match; see
+            # provome.confirmation.  Unconfirmed items are carried
+            # with their demoted status for audit, never counted.
+            status, note = confirm_literature(self.transport, pmid, title)
             items.append(
                 EvidenceItem(
                     item_id=f"live-lit-{pmid}",
@@ -747,8 +777,9 @@ class LiveEvidenceProvider:
                     ),
                     kind=EvidenceKind.LITERATURE_REPORT,
                     direction=SupportDirection.SUPPORTS,
-                    status=VerificationStatus.VERIFIED,
+                    status=status,
                     locator=f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+                    notes=note,
                 )
             )
         return items

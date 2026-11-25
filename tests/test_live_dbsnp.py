@@ -55,6 +55,16 @@ def literature_fixture():
     }
 
 
+
+
+def pubmed_fixture(url):
+    """Honest PubMed for the fixture world: the one literature
+    PMID these fixtures serve (33333333) resolves with its
+    recorded title; anything else does not exist."""
+    pmid = url.rsplit("id=", 1)[1]
+    if pmid == "33333333":
+        return {"result": {"uids": [pmid], pmid: {"title": "A relevant paper."}}}
+    return {"result": {"uids": []}}
 # -- unit tests: parsing and selection --------------------------------------
 
 
@@ -212,6 +222,8 @@ HBB_REFSNP_334 = {
 def hbb_transport(url, body=None):
     if "esearch" in url and "db=clinvar" in url:
         return {"esearchresult": {"idlist": ["15333"]}}
+    if "esummary" in url and "db=pubmed" in url:
+        return pubmed_fixture(url)
     if "esummary" in url:
         return {
             "result": {
@@ -329,6 +341,8 @@ def _cftr_record(uid, title, protein_change, xrefs, spdi):
 def cftr_transport(url, body=None):
     if "esearch" in url and "db=clinvar" in url:
         return {"esearchresult": {"idlist": ["4072070", "7105"]}}
+    if "esummary" in url and "db=pubmed" in url:
+        return pubmed_fixture(url)
     if "esummary" in url:
         return {
             "result": {
@@ -438,6 +452,8 @@ def _single_record_transport(refsnp_payload=None, refsnp_error=False):
     def transport(url, body=None):
         if "esearch" in url and "db=clinvar" in url:
             return {"esearchresult": {"idlist": ["15333"]}}
+        if "esummary" in url and "db=pubmed" in url:
+            return pubmed_fixture(url)
         if "esummary" in url:
             record = {
                 "title": "NM_000518.5(HBB):c.20A>T (p.Glu7Val)",
