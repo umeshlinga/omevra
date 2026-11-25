@@ -3,6 +3,19 @@
 All notable changes to Omevra are recorded here. Versions follow
 semantic versioning.
 
+## [0.4.0] - 2026-11-25
+
+Step 4: the human Copilot (Items 21 + 23). `omevra.converse.Guide`
+wraps the gated Copilot in a conversational layer at three depths
+(simple / standard / expert). It adds no claims: every factual
+sentence comes from a finished gated answer; declines stay declines
+and are explained with the exact missing piece and the question
+shape that unblocks them. Tool questions ("What is Provome?", "How
+do you work?", pricing, coverage, sources) are answered from a
+static product fact sheet with honest coverage limits. Every guided
+answer carries run transparency (provider, gate arithmetic,
+confidence-is-a-heuristic note) and limits. 7 new tests; suite 237.
+
 ## [0.3.0] - 2026-11-25
 
 Step 3: the live brain. The Copilot gains its own browser
