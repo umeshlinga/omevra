@@ -277,6 +277,20 @@ def default_source_registry() -> SourceRegistry:
                 base_url="https://rest.ensembl.org/",
             ),
             Source(
+                source_id="ensembl-plants",
+                name="Ensembl Plants",
+                independence_group="ensembl",
+                description=(
+                    "Ensembl Plants genome browser: gene and trait "
+                    "records across plant species, via the Ensembl "
+                    "REST API. Same organisation as Ensembl, so it "
+                    "shares the 'ensembl' independence group and "
+                    "never counts as a second independent source "
+                    "alongside it."
+                ),
+                base_url="https://rest.ensembl.org/",
+            ),
+            Source(
                 source_id="demo-bundled",
                 name="Provome bundled illustrative examples",
                 independence_group="provome-demo",

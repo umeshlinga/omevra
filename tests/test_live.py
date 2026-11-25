@@ -134,3 +134,27 @@ def test_empty_sources_contribute_nothing():
         transport=empty_transport, today=lambda: FIXED_DATE
     )
     assert provider.items_for_topic("XYZ1:p.Ala1Val") == ()
+
+
+def test_transport_failure_in_one_source_never_crashes():
+    """CEO regression (2026-11-25): a flaky public API must cost
+    only its own items, never the whole answer. The literature
+    transport raises; ClinVar items still come back."""
+
+    def flaky(url, body=None):
+        if "europepmc" in url:
+            raise TimeoutError("simulated public-API flake")
+        return fixture_transport(url, body)
+
+    provider = LiveEvidenceProvider(transport=flaky, today=lambda: FIXED_DATE)
+    items = provider.items_for_topic("HBB:p.Glu6Val")
+    assert items  # ClinVar still contributed
+    assert all(i.source_id != "pubmed-literature" for i in items)
+
+
+def test_all_transports_failing_returns_empty_not_exception():
+    def dead(url, body=None):
+        raise ConnectionError("simulated outage")
+
+    provider = LiveEvidenceProvider(transport=dead, today=lambda: FIXED_DATE)
+    assert provider.items_for_topic("HBB:p.Glu6Val") == ()

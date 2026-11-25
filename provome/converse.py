@@ -76,8 +76,10 @@ TOOL_FACTS = {
         "live (v0.6.0, ChEMBL-backed, computational only). The "
         "Animal division has a first live provider (v0.8.0, "
         "Ensembl-backed) but is in build and unbenchmarked, so it "
-        "is NOT claimed as covered; the Plant division is on the "
-        "roadmap. Coverage is claimed only after a benchmark. "
+        "is NOT claimed as covered; the Plant division has a first "
+        "live provider (v0.9.0, Ensembl Plants-backed), also in "
+        "build and unbenchmarked, so it is NOT claimed as covered "
+        "either. Coverage is claimed only after a benchmark. "
         "Provome is research software, not for clinical use."
     ),
     "price": (
