@@ -3,6 +3,29 @@
 All notable changes to Provome are recorded here. Versions follow
 semantic versioning.
 
+## [0.16.0] - 2026-11-25
+
+Plant benchmark v1 + two provider fixes it forced.
+`provome/plant_benchmark.py`: 21 frozen probes (8 ANSWER,
+13 DECLINE), same audited harness as Animal; fixture score
+21/21 - a smoke benchmark, NOT external validation; coverage
+wording unchanged. The set keeps its gaps visible on purpose:
+rice SD1 and maize TB1 (real genes the Ensembl Plants symbol
+index cannot resolve), Arabidopsis FRI (record exists,
+literature window too thin), trait topics (decline by
+design). FIXES in `provome/plant.py`: (1) the gene-symbol
+pattern was all-uppercase-only, making real symbols like
+Rht-B1, GmFT2a and tb1 unaskable - widened with a gene-shape
+predicate, regression-tested both ways (live check: Rht-B1
+now parses and reaches the gate, declining honestly on the
+index limit); (2) the phenotype parser read the same nested
+payload shape that broke Animal - corrected defensively to
+the real top-level shape (Ensembl Plants serves no
+associations today, so the path is unproven live for Plant
+and contributes zero items either way). Every Plant answer
+still sits exactly at the gate minimum - zero margin is the
+division's known weakness, recorded, not hidden. Suite 339.
+
 ## [0.15.0] - 2026-11-25
 
 Animal benchmark v1 + a production bug it caught and we

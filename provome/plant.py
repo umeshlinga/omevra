@@ -115,8 +115,35 @@ SPECIES: tuple = (
 )
 _BY_KEY = {info.key: info for info in SPECIES}
 
-_GENE_TOKEN = re.compile(r"\b([A-Z][A-Z0-9]{1,11})\b")
+_GENE_TOKEN = re.compile(r"\b([A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)?)\b")
 _NOT_GENES = {"DNA", "RNA", "USA", "FDA", "WHO", "II", "III", "IV", "PCR", "NGS"}
+
+
+def _looks_like_gene(token: str) -> bool:
+    """Gene-symbol shape test (widened 2026-11-25, CEO fix).
+
+    The original all-uppercase-only pattern made real plant
+    symbols unaskable - Rht-B1 (wheat), GmFT2a (soybean), tb1
+    (maize) could never be extracted from a question, as the
+    Plant benchmark v1 construction found. A token counts as
+    gene-like when it carries a digit, a hyphen, an all-caps
+    body of length >= 2, or an internal capital after a
+    lowercase letter (GmFT2a). Plain English words - "What",
+    "Rice", "flowering" - carry none of these and never match.
+    A false positive costs one failed lookup and an honest
+    decline; a false negative makes a real gene unaskable.
+    """
+    if token in _NOT_GENES or len(token) < 2:
+        return False
+    if any(ch.isdigit() for ch in token):
+        return True
+    if "-" in token:
+        return True
+    if token.isupper():
+        return True
+    return any(ch.isupper() for ch in token[1:]) and any(
+        ch.islower() for ch in token
+    )
 
 _STOPWORDS = {
     "what", "is", "are", "the", "a", "an", "known", "about", "in",
@@ -190,7 +217,7 @@ def parse_plant_query(question_text: str) -> Optional[PlantQuery]:
         return None
     for match in _GENE_TOKEN.finditer(question_text):
         token = match.group(1)
-        if token not in _NOT_GENES:
+        if _looks_like_gene(token):
             return PlantQuery(species=species, subject=token, is_gene=True)
     condition = _find_condition(question_text, species)
     if condition:
@@ -340,12 +367,25 @@ class PlantEvidenceProvider:
         for entry in payload:
             if not isinstance(entry, dict):
                 continue
-            phenotype = entry.get("phenotype")
-            if isinstance(phenotype, dict):
-                description = phenotype.get("description", "")
-            else:
-                description = str(phenotype or "")
-            description = description.strip()
+            # Defensive parity with the animal.py fix
+            # (2026-11-25): the main Ensembl API serves the
+            # description at the entry's TOP level with a
+            # plain-string source; the nested shape this code
+            # originally read exists in neither API. Ensembl
+            # Plants currently serves no associations at all
+            # (empty lists / upstream errors, recorded verbatim
+            # by the Plant benchmark), so this path contributes
+            # zero items today either way - but if associations
+            # ever arrive in the main-Ensembl shape, they must
+            # not be silently dropped the way Animal's were.
+            description = entry.get("description", "")
+            if not description:
+                phenotype = entry.get("phenotype")
+                if isinstance(phenotype, dict):
+                    description = phenotype.get("description", "")
+                elif phenotype:
+                    description = str(phenotype)
+            description = str(description).strip()
             if not description or description in seen:
                 continue
             seen.add(description)
@@ -353,6 +393,8 @@ class PlantEvidenceProvider:
             source = entry.get("source")
             if isinstance(source, dict):
                 source_name = source.get("name", "")
+            elif source:
+                source_name = str(source)
             items.append(
                 EvidenceItem(
                     item_id=(

@@ -196,3 +196,23 @@ def test_division_scope_guard_both_directions():
         )
     )
     assert plant_q.verdict is Verdict.DECLINE
+
+
+def test_parse_mixed_case_gene_symbols():
+    """CEO regression (2026-11-25): real plant symbols that are
+    not all-uppercase must be extractable - the Plant benchmark
+    construction found Rht-B1 and GmFT2a unaskable."""
+    q = parse_plant_query("What is known about Rht-B1 in wheat?")
+    assert q is not None and q.subject == "Rht-B1" and q.is_gene
+    q = parse_plant_query("What is known about GmFT2a in soybean?")
+    assert q is not None and q.subject == "GmFT2a" and q.is_gene
+    q = parse_plant_query("What is known about tb1 in maize?")
+    assert q is not None and q.subject == "tb1" and q.is_gene
+
+
+def test_parse_plain_words_are_not_genes():
+    """The widened pattern must not turn English into genes."""
+    q = parse_plant_query("What is known about flowering in Arabidopsis?")
+    assert q is None or not q.is_gene
+    q = parse_plant_query("Tell me about rice in general terms please")
+    assert q is None or not q.is_gene
